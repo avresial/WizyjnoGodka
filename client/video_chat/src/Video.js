@@ -1,18 +1,35 @@
-import React, { useEffect } from 'react'
-import VideoCallback from './VideoCallback'
+import React, { useRef, useEffect } from 'react'
 
-const Vid = () => {
+const Video = (props) => {
+    const stream = useRef();
+    const userVideo = useRef();
+
     useEffect(() => {
-        const callback = new VideoCallback();
-        callback.startCapture();
-    }, []);
+        if (props.videoOn) {
+            navigator.mediaDevices.getUserMedia({audio:false, video:true}).then((mediaStream) => {
+                stream.current = mediaStream;
+                if(userVideo.current)
+                {
+                    userVideo.current.srcObject = mediaStream;
+                }
+            });
+        }
+        else {
+            let tracks = stream.current.getTracks();
+            tracks.forEach(function(track) {
+                track.stop();
+            });
+        }
+    }, [props.videoOn]);
 
     return(
         <div id='video-container'>
-            <video autoPlay></video>
+            {props.videoOn 
+            ? <video playsInline muted ref={userVideo} autoPlay /> 
+            : null}
         </div>
     )
 
 }
 
-export default Vid;
+export default Video;
