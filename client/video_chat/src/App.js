@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import Video from "./Video"
+import Video from './Video'
 import './App.css';
+import User from './LeftPanel/User/User'
 
 const App = () => {
 
@@ -22,7 +23,9 @@ const App = () => {
 
     return(
       <div className="App">
-     
+      <User name="Kamil" status={true}></User>
+      <User name="Adam" status={true}></User>
+      <User name="Łukasz" status={true}></User>
       <Video videoOn={videoOn} />
       
       <button onClick={onButtonClickHandler}>{videoOn ? 'hide' : 'show'} video </button>
