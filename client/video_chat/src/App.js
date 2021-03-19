@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import Video from './Video'
-import './App.css';
-import User from './LeftPanel/User/User'
+import LeftPanel from './LeftPanel/LeftPanel'
+import RightPanel from './RightPanel/RightPanel'
+import 'bootstrap/dist/css/bootstrap.min.css';
+import Container from 'react-bootstrap/Container'
 
 const App = () => {
 
@@ -17,21 +18,18 @@ const App = () => {
     });
   }, []);
 
-    const onButtonClickHandler = () =>{
+    const onButtonClickHandler = () => {
       setVideoOn(!videoOn);
     }
 
     return(
-      <div className="App">
-      <User name="Kamil" status={true}></User>
-      <User name="Adam" status={true}></User>
-      <User name="Łukasz" status={true}></User>
-      <Video videoOn={videoOn} />
-      
-      <button onClick={onButtonClickHandler}>{videoOn ? 'hide' : 'show'} video </button>
-
-    </div>
-    )
+      <Container fluid >
+        <div className = 'row h-100'>
+          <LeftPanel />
+          <RightPanel onClick={onButtonClickHandler} videoOn={videoOn}/>
+        </div>
+      </Container>
+    );
 }
 
 export default App;

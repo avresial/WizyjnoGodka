@@ -15,7 +15,7 @@ const Video = (props) => {
             });
         }
         else {
-            let tracks = stream.current.getTracks();
+            const tracks = stream.current.getTracks();
             tracks.forEach(function(track) {
                 track.stop();
             });
