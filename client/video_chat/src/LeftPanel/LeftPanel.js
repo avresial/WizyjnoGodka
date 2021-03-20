@@ -3,7 +3,7 @@ import User from './User/User'
 import classes from './LeftPanel.module.css'
 
 const LeftPanel = () => {
-    const style = `${classes.LeftPanel} col-md-4 vh-100`
+    const style = `${classes.LeftPanel} col-md-4`
     return (
         <div className={style}>
             <User name="Kamil" status={true}></User>

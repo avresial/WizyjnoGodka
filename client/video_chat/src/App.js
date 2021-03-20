@@ -24,7 +24,7 @@ const App = () => {
 
     return(
       <Container fluid >
-        <div className = 'row h-100'>
+        <div className = 'row vh-100'>
           <LeftPanel />
           <RightPanel onClick={onButtonClickHandler} videoOn={videoOn}/>
         </div>

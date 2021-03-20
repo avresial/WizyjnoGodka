@@ -1,3 +1,5 @@
 .RightPanel{
-    background-color: bisque;
+    background-color: #DDDDDD;
+    justify-content: center;
+    align-items: center;
 }
