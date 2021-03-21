@@ -1,4 +1,4 @@
-import react from 'react'
+import React from 'react'
 import classes from './User.module.css'
 
 const User = (props) => {
