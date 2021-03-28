@@ -1,0 +1,28 @@
+.User {
+    background-color: whitesmoke;
+    border-radius: 5px;
+    box-shadow: 2px 2px 10px black;
+    margin:15px !important;
+    justify-content: center;
+    align-items: center;
+    transition: 0.5s all;
+}
+
+.User:hover {
+    cursor: pointer;
+    background-color: lightgray;
+}
+
+.User p{
+    color:black;
+    font-weight: 700;
+}
+
+.status {
+    position:relative;
+    left:95%;
+    background-color: rgb(0, 102, 0);
+    width:10px;
+    height:10px;
+    border-radius: 50%;
+}
