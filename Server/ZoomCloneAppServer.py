@@ -9,7 +9,6 @@ sio = socketio.AsyncServer(cors_allowed_origins='*')
 app = web.Application()
 sio.attach(app)
 
-
 class User():
     Sid = 0
 
@@ -34,12 +33,13 @@ def disconnect(sid):
 
 @sio.event
 def GetUsers(sid):
-    sio.send(ListOfUsers,sid)
+    sio.send(ListOfUsers,sid) #use aiohttp insted and send data via Json object
     print('Sending list of users to - ' + sid)
+    #httpEndpoint
 
 
 @sio.event
-async def data(sid, data):
+async def data(sid, data): # data is going to be Video and audio
     print('Message from {}: {}'.format(sid, data))
     await sio.emit('data', data, room=ROOM, skip_sid=sid)
 
