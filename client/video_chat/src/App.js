@@ -6,11 +6,10 @@ import Container from 'react-bootstrap/Container'
 
 const App = () => {
 
+  const interval = useRef();
   const io = require('socket.io-client');
   const socket = io('127.0.0.1:8000', { autoConnect: false });
 
-  console.log("called");
-  
   const [videoOn, setVideoOn] = useState(true);
   const [sendOn, setSendOn] = useState(false);
 
@@ -40,19 +39,24 @@ const App = () => {
     setVideoOn(!videoOn);
   };
 
+  const intervalSend = () => {
+    if (!sendOn) {
+      interval.current = setInterval(() => {
+        console.log("Send");
+        socket.emit('data', "Elo");
+      }, 1000);
+    } else {
+      clearInterval(interval.current);
+    }
+  };
+
   const onButtonSendClickhandler = () => {
     setSendOn(!sendOn);
-    const interval = () => {
-        if (sendOn) {
-          interval = setInterval(() => {
-            console.log("Hej");
-          }, 1000);
-        }
-    };
+    intervalSend();
   };
 
   return(
-    <Container fluid >
+    <Container fluid>
       <div className = 'row vh-100'>
         <LeftPanel onClick={onButtonSendClickhandler} sendOn={sendOn} />
         <RightPanel onClick={onButtonClickHandler} videoOn={videoOn}/>
