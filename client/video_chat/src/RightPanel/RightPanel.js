@@ -15,7 +15,7 @@ const RightPanel = (props) => {
     return(
         <div className = {style}>
             <div className='row'>
-                <Video videoOn = {props.videoOn} />
+                {/* <Video videoOn = {props.videoOn} /> */}
             </div>
             <div className='row' style={styleButtonRow}>
                 <Button onClick={props.onClick}> {props.videoOn ? 'hide' : 'show'} video</Button>
