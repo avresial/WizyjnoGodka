@@ -4,11 +4,12 @@ import RightPanel from './RightPanel/RightPanel'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Container from 'react-bootstrap/Container'
 
+const io = require('socket.io-client');
+const socket = io('127.0.0.1:8000', { autoConnect: false });
+
 const App = () => {
 
   const interval = useRef();
-  const io = require('socket.io-client');
-  const socket = io('127.0.0.1:8000', { autoConnect: false });
 
   const [videoOn, setVideoOn] = useState(true);
   const [sendOn, setSendOn] = useState(false);
@@ -42,8 +43,7 @@ const App = () => {
   const intervalSend = () => {
     if (!sendOn) {
       interval.current = setInterval(() => {
-        console.log("Send");
-        socket.emit('data', "Elo");
+        socket.emit('data', 'elo');
       }, 1000);
     } else {
       clearInterval(interval.current);
