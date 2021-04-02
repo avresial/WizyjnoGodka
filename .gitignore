@@ -125,3 +125,4 @@ Server/venv
 .mypy_cache/
 .dmypy.json
 dmypy.json
+client/video_chat/node_modules/
