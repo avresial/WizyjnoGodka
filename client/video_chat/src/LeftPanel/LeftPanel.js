@@ -11,9 +11,6 @@ const LeftPanel = (props) => {
             <User name="Adam" status={true}></User>
             <User name="Łukasz" status={true}></User>
             <center><Button onClick={props.onClick}>Send</Button></center>
-            { props.sendOn? 
-            <p>Sending...</p> 
-            : null }
         </div>
     );
 };

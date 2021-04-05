@@ -12,12 +12,11 @@ const App = () => {
   const interval = useRef();
 
   const [videoOn, setVideoOn] = useState(true);
-  const [sendOn, setSendOn] = useState(false);
 
   useEffect(() => {
     console.log('SoC called');
 
-    socket.connect();
+    //socket.connect();
     socket.on('connect', () => {
       console.log(socket.id);
     });
@@ -40,25 +39,26 @@ const App = () => {
     setVideoOn(!videoOn);
   };
 
-  const intervalSend = () => {
-    if (!sendOn) {
-      interval.current = setInterval(() => {
-        socket.emit('data', 'elo');
-      }, 1000);
-    } else {
-      clearInterval(interval.current);
-    }
-  };
+  // const intervalSend = () => {
+  //   if (!sendOn) {
+  //     interval.current = setInterval(() => {
+  //       socket.emit('data', 'elo');
+  //     }, 1000);
+  //   } else {
+  //     clearInterval(interval.current);
+  //   }
+  // };
+
+
 
   const onButtonSendClickhandler = () => {
-    setSendOn(!sendOn);
-    intervalSend();
+
   };
 
   return(
     <Container fluid>
       <div className = 'row vh-100'>
-        <LeftPanel onClick={onButtonSendClickhandler} sendOn={sendOn} />
+        <LeftPanel onClick={onButtonSendClickhandler} />
         <RightPanel onClick={onButtonClickHandler} videoOn={videoOn}/>
       </div>
     </Container>
