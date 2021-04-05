@@ -8,10 +8,19 @@ const io = require('socket.io-client');
 const socket = io('127.0.0.1:8000', { autoConnect: false });
 
 const App = () => {
-
-  const interval = useRef();
-
   const [videoOn, setVideoOn] = useState(true);
+  const [messageList, addToMessageList] = useState([
+    {type: 'guest', message: 'Hello. How are you today?'},
+    {type: 'user',  message: 'Fine'},
+    {type: 'guest', message: 'Fock off'},
+    {type: 'user',  message: 'U too motherfocker'}
+  ]);
+  const [listOfConnections, changeListOfConnections] = useState([
+    {uniqueId: 'ZVBlgeqphfos', name: 'Kamil'},
+    {uniqueId: 'POGHieqodvjh', name: 'Adam'},
+    {uniqueId: 'QEYOGDvppauy', name: 'Łukasz'},
+    {uniqueId: 'HADSHreywfdg', name: 'Krystian'}
+  ]);
 
   useEffect(() => {
     console.log('SoC called');
@@ -39,6 +48,16 @@ const App = () => {
     setVideoOn(!videoOn);
   };
 
+  const onMessageSend = (text) => {
+    let temporaryList = [...messageList];
+    temporaryList.push({type: 'user', message: text});
+    addToMessageList(temporaryList);
+  };
+
+  const onMessageGet = () => {
+
+  };
+
   // const intervalSend = () => {
   //   if (!sendOn) {
   //     interval.current = setInterval(() => {
@@ -49,17 +68,11 @@ const App = () => {
   //   }
   // };
 
-
-
-  const onButtonSendClickhandler = () => {
-
-  };
-
   return(
     <Container fluid>
       <div className = 'row vh-100'>
-        <LeftPanel onClick={onButtonSendClickhandler} />
-        <RightPanel onClick={onButtonClickHandler} videoOn={videoOn}/>
+        <LeftPanel connections={listOfConnections}/>
+        <RightPanel onVideoButtonClick={onButtonClickHandler} onSendButtonClick={(text) => onMessageSend(text)} videoOn={videoOn} messageList={messageList}/>
       </div>
     </Container>
   );
