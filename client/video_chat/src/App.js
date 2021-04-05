@@ -1,15 +1,15 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState } from 'react'
 import LeftPanel from './LeftPanel/LeftPanel'
 import RightPanel from './RightPanel/RightPanel'
-import 'bootstrap/dist/css/bootstrap.min.css';
 import Container from 'react-bootstrap/Container'
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const io = require('socket.io-client');
 const socket = io('127.0.0.1:8000', { autoConnect: false });
 
 const App = () => {
   const [videoOn, setVideoOn] = useState(true);
-  const [messageList, addToMessageList] = useState([
+  const [messageList, setMessageList] = useState([
     {type: 'guest', message: 'Hello. How are you today?'},
     {type: 'user',  message: 'Fine'},
     {type: 'guest', message: 'Fock off'},
@@ -25,7 +25,7 @@ const App = () => {
   useEffect(() => {
     console.log('SoC called');
 
-    //socket.connect();
+    socket.connect();
     socket.on('connect', () => {
       console.log(socket.id);
     });
@@ -42,6 +42,10 @@ const App = () => {
       
     });
 
+    socket.on('message', (data) =>{
+      onMessageGet(data);
+    });
+
   }, []);
 
   const onButtonClickHandler = () => {
@@ -49,24 +53,15 @@ const App = () => {
   };
 
   const onMessageSend = (text) => {
-    let temporaryList = [...messageList];
-    temporaryList.push({type: 'user', message: text});
-    addToMessageList(temporaryList);
+    const temporaryList = [{type: 'user', message: text}];
+    setMessageList(messageList => ([...messageList, ...temporaryList]));
+    socket.emit('chat', text);
   };
 
-  const onMessageGet = () => {
-
-  };
-
-  // const intervalSend = () => {
-  //   if (!sendOn) {
-  //     interval.current = setInterval(() => {
-  //       socket.emit('data', 'elo');
-  //     }, 1000);
-  //   } else {
-  //     clearInterval(interval.current);
-  //   }
-  // };
+  const onMessageGet = (text) => {
+    const temporaryList = [{type: 'guest', message: text}];
+    setMessageList(messageList => ([...messageList, ...temporaryList]));
+  }
 
   return(
     <Container fluid>

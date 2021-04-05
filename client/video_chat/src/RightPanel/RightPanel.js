@@ -50,7 +50,10 @@ const RightPanel = (props) => {
                 </FormGroup>
             </div>
             <div className='row' style={styleButtonRowRight}>
-                <Button onClick={() => {props.onSendButtonClick(document.getElementsByClassName('form-control')[0].value); document.getElementsByClassName('form-control')[0].value = ''}}>Send</Button>
+                <Button onClick={() => { props.onSendButtonClick(
+                    document.getElementsByClassName('form-control')[0].value); 
+                    document.getElementsByClassName('form-control')[0].value = '';
+                    }}>Send</Button>
             </div>
         </div>
     );
