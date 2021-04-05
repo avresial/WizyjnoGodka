@@ -2,50 +2,34 @@ import React, { useEffect, useState } from 'react'
 import LeftPanel from './LeftPanel/LeftPanel'
 import RightPanel from './RightPanel/RightPanel'
 import Container from 'react-bootstrap/Container'
+import StarterPanel from './StarterPanel/StarterPanel'
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const io = require('socket.io-client');
 const socket = io('127.0.0.1:8000', { autoConnect: false });
 
 const App = () => {
+  const [username, setName] = useState('default');
+  const [isNameSet, setIsNameSet] = useState(false);
   const [videoOn, setVideoOn] = useState(true);
-  const [messageList, setMessageList] = useState([
-    {type: 'guest', message: 'Hello. How are you today?'},
-    {type: 'user',  message: 'Fine'},
-    {type: 'guest', message: 'Fock off'},
-    {type: 'user',  message: 'U too motherfocker'}
-  ]);
-  const [listOfConnections, changeListOfConnections] = useState([
-    {uniqueId: 'ZVBlgeqphfos', name: 'Kamil'},
-    {uniqueId: 'POGHieqodvjh', name: 'Adam'},
-    {uniqueId: 'QEYOGDvppauy', name: 'Łukasz'},
-    {uniqueId: 'HADSHreywfdg', name: 'Krystian'}
-  ]);
+  const [messageList, setMessageList] = useState([]);
+  const [listOfConnections, setListOfConnections] = useState([]);
 
   useEffect(() => {
     console.log('SoC called');
 
-    socket.connect();
     socket.on('connect', () => {
       console.log(socket.id);
-    });
-
-    socket.on('connect_error', () => {
-      
-    });
-
-    socket.on('connect_failed', () => {
-      
-    });
-
-    socket.on('disconnect', () => {
-      
     });
 
     socket.on('message', (data) =>{
       onMessageGet(data);
     });
 
+    socket.on('connections', (data) =>{
+      const tempList = JSON.parse(data);
+      setListOfConnections(listOfConnections => ([...listOfConnections, ...tempList]));
+    });
   }, []);
 
   const onButtonClickHandler = () => {
@@ -63,12 +47,24 @@ const App = () => {
     setMessageList(messageList => ([...messageList, ...temporaryList]));
   }
 
+  const setUserName = (user) => {
+    socket.connect();
+    setName( username => (username, user) );
+    setIsNameSet(true);
+    socket.emit('name', user);
+    socket.emit('connections');
+  }
+
   return(
     <Container fluid>
-      <div className = 'row vh-100'>
-        <LeftPanel connections={listOfConnections}/>
-        <RightPanel onVideoButtonClick={onButtonClickHandler} onSendButtonClick={(text) => onMessageSend(text)} videoOn={videoOn} messageList={messageList}/>
-      </div>
+      {
+        isNameSet ?
+        <div className = 'row vh-100'>
+          <LeftPanel connections={listOfConnections}/>
+          <RightPanel onVideoButtonClick={onButtonClickHandler} onSendButtonClick={(text) => onMessageSend(text)} videoOn={videoOn} messageList={messageList}/>
+        </div>
+        : <StarterPanel OnClick={(user) => setUserName(user)}></StarterPanel>
+      }
     </Container>
   );
 }
