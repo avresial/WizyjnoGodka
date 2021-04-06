@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import LeftPanel from './LeftPanel/LeftPanel'
 import RightPanel from './RightPanel/RightPanel'
 import Container from 'react-bootstrap/Container'
@@ -16,20 +16,41 @@ const App = () => {
   const [listOfConnections, setListOfConnections] = useState([]);
 
   useEffect(() => {
-    console.log('SoC called');
-
     socket.on('connect', () => {
       console.log(socket.id);
     });
-
-    socket.on('message', (data) =>{
+  
+    socket.on('message', (data) => {
       onMessageGet(data);
     });
-
-    socket.on('connections', (data) =>{
+  
+    socket.on('connections', (data) => {
       const tempList = JSON.parse(data);
       setListOfConnections(listOfConnections => ([...listOfConnections, ...tempList]));
     });
+  
+    socket.on('add-connection', (data) => {
+      const parsedData = JSON.parse(data);
+      const newConnection = [{sid: parsedData.sid, name: parsedData.name}];
+      setListOfConnections(listOfConnections => ([...listOfConnections, ...newConnection]));
+    });
+  
+    socket.on('remove-connection', (sid) => {
+      setListOfConnections(listOfConnections => {
+        const tempList = [...listOfConnections];
+        console.log(tempList);
+        tempList.map( (connection, index) => {
+          if (connection.sid === sid)
+          {
+            console.log('removed');
+            tempList.splice(index, 1);
+          }
+          return 0;
+        });
+        return tempList;
+      });
+    });
+
   }, []);
 
   const onButtonClickHandler = () => {
