@@ -1,60 +1,33 @@
 from aiohttp import web
 import socketio
-import json
+from User import user_list
 
 
 ROOM = 'room'
-
-
+list = user_list.UserList()
 sio = socketio.AsyncServer(cors_allowed_origins='*')
 app = web.Application()
 sio.attach(app)
-
-list_of_users = []
-
-
-class User:
-    def __init__(self, sid_id):
-        self.sid = sid_id
-        self.name = ''
-
-    def set_name(self, name):
-        self.name = name
-
-    def compare(self, sid):
-        if self.sid == sid:
-            return True
-        else:
-            return False
-
-
-class EncodeUser(json.JSONEncoder):
-    def default(self, o):
-        return o.__dict__
-
-
-def parse_to_json() -> str:
-    str = json.dumps(list_of_users, indent=4, cls=EncodeUser)
-    return str
 
 
 @sio.event
 async def connect(sid, environ):
     print('Connected', sid)
-    await sio.emit('ready', room=ROOM, skip_sid=sid)
     sio.enter_room(sid, ROOM)
-    list_of_users.append(User(sid))
+    list.append_new_user(sid)
 
 
 @sio.event
-def disconnect(sid):
+async def disconnect(sid):
+    list.remove_user(sid)
+    await sio.emit('remove-connection', data=sid, skip_sid=sid)
     sio.leave_room(sid, ROOM)
     print('Disconnected', sid)
 
 
 @sio.on('connections')
 async def get_users(sid):
-    str = parse_to_json()
+    str = list.get_user_list_in_json(sid)
     await sio.emit('connections', data=str, to=sid)
 
 
@@ -71,11 +44,13 @@ async def pass_data(sid, message):
 
 @sio.on('name')
 async def pass_name(sid, name):
-    for user in list_of_users:
+    for user in list.list_of_users:
         if user.compare(sid):
             user.set_name(name)
+            json_object = list.parse_user_to_json(user)
+            await sio.emit('add-connection', data=json_object, skip_sid=sid)
             break
 
 
-if __name__ == '__main__':
+def start_server():
     web.run_app(app, port=8000)
