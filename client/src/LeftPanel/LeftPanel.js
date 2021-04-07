@@ -7,13 +7,13 @@ const LeftPanel = (props) => {
     const style = `${classes.LeftPanel} col-md-4`
     return (
         <div className={style}>
-            <User name="Kamil" status={true}></User>
-            <User name="Adam" status={true}></User>
-            <User name="Łukasz" status={true}></User>
-            <center><Button onClick={props.onClick}>Send</Button></center>
-            { props.sendOn? 
-            <p>Sending...</p> 
-            : null }
+            {
+                props.connections.map((currentElement) => {
+                    return(
+                        <User key={currentElement.sid} name={`${currentElement.name}(${currentElement.sid})`} status={true}></User>
+                    );
+                })
+            }
         </div>
     );
 };
