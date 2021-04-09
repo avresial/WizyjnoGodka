@@ -8,9 +8,13 @@ const LeftPanel = (props) => {
     return (
         <div className={style}>
             {
-                props.connections.map((currentElement) => {
+                props.connections.map((currentElement, index) => {
                     return(
-                        <User key={currentElement.sid} name={`${currentElement.name}(${currentElement.sid})`} status={true}></User>
+                        <User sendRequest={() => props.sendRequest(index)} 
+                            key={currentElement.sid} 
+                            name={`${currentElement.name}(${currentElement.sid})`} 
+                            status={true}>
+                        </User>
                     );
                 })
             }

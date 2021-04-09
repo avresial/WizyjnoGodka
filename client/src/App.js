@@ -68,6 +68,11 @@ const App = () => {
     setMessageList(messageList => ([...messageList, ...temporaryList]));
   }
 
+  const SendConnectionRequest = (index) => {
+    const data = listOfConnections[index].sid;
+    socket.emit('send-invitation', data);
+  };
+
   const setUserName = (user) => {
     socket.connect();
     setName( username => (username, user) );
@@ -81,7 +86,7 @@ const App = () => {
       {
         isNameSet ?
         <div className = 'row vh-100'>
-          <LeftPanel connections={listOfConnections}/>
+          <LeftPanel connections={listOfConnections} sendRequest={SendConnectionRequest} />
           <RightPanel onVideoButtonClick={onButtonClickHandler} onSendButtonClick={(text) => onMessageSend(text)} videoOn={videoOn} messageList={messageList}/>
         </div>
         : <StarterPanel OnClick={(user) => setUserName(user)}></StarterPanel>
