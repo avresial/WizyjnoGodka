@@ -17,7 +17,7 @@ const App = () => {
 
   useEffect(() => {
     socket.on('connect', () => {
-      console.log(socket.id);
+      console.log('Your socket id: ', socket.id);
     });
   
     socket.on('message', (data) => {
@@ -38,7 +38,6 @@ const App = () => {
     socket.on('remove-connection', (sid) => {
       setListOfConnections(listOfConnections => {
         const tempList = [...listOfConnections];
-        console.log(tempList);
         tempList.map( (connection, index) => {
           if (connection.sid === sid)
           {
@@ -58,13 +57,15 @@ const App = () => {
   };
 
   const onMessageSend = (text) => {
-    const temporaryList = [{type: 'user', message: text}];
+    const temporaryList = [{sender: 'You', type: 'user', message: text}];
     setMessageList(messageList => ([...messageList, ...temporaryList]));
-    socket.emit('chat', text);
+    let nameAndSid = `${username}(${socket.id})`;
+    let message = {senderName: nameAndSid, data: text};
+    socket.emit('chat', message);
   };
 
-  const onMessageGet = (text) => {
-    const temporaryList = [{type: 'guest', message: text}];
+  const onMessageGet = (data) => {
+    const temporaryList = [{sender: data.senderName, type: 'guest', message: data.data}];
     setMessageList(messageList => ([...messageList, ...temporaryList]));
   }
 

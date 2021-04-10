@@ -27,18 +27,18 @@ const RightPanel = (props) => {
     
     return(
         <div className = {style}>
-            <div className='row'>
-                {/* <Video videoOn = {props.videoOn} /> */}
+            {/* <div className='row'>
+                <Video videoOn = {props.videoOn} />
             </div>
             <div className='row' style={styleButtonRow}>
                 <Button onClick={props.onVideoButtonClick}> {props.videoOn ? 'hide' : 'show'} video</Button>
-            </div>
+            </div> */}
             <div className='row' >
                 <div className='overflow-auto' style={overflowStyle}>
                 {
                     props.messageList.map((currentElement, index) => {
                         return(
-                            <MessageBox key={index} type={currentElement.type}>{currentElement.message}</MessageBox>
+                            <MessageBox key={index} sender={currentElement.sender} type={currentElement.type}>{currentElement.message}</MessageBox>
                         );
                     })
                 }

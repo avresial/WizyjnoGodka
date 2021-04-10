@@ -1,14 +1,14 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import MessageBoxGuest from './MessageBoxGuest'
 import MessageBoxUser from './MessageBoxUser'
 
 const MessageBox = (props) => {
     let element = null;
     if (props.type === 'user'){
-        element = <MessageBoxUser>{props.children}</MessageBoxUser>
+        element = <MessageBoxUser sender={props.sender}>{props.children}</MessageBoxUser>
     }
     else {
-        element = <MessageBoxGuest>{props.children}</MessageBoxGuest>
+        element = <MessageBoxGuest sender={props.sender}>{props.children}</MessageBoxGuest>
     }
 
     return(
