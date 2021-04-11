@@ -1,5 +1,5 @@
 import React from 'react'
-import Video from '../Assets/Video'
+import Video from '../Video'
 import classes from './RightPanel.module.css'
 import Button from 'react-bootstrap/Button'
 import FormGroup from 'react-bootstrap/FormGroup'
@@ -38,7 +38,7 @@ const RightPanel = (props) => {
                 {
                     props.messageList.map((currentElement, index) => {
                         return(
-                            <MessageBox key={index} sender={currentElement.sender} type={currentElement.type}>{currentElement.message}</MessageBox>
+                            <MessageBox key={index} sender={currentElement.sender} type={currentElement.type} time={currentElement.time}>{currentElement.message}</MessageBox>
                         );
                     })
                 }

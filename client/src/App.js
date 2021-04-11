@@ -1,12 +1,18 @@
 import React, { useEffect, useState, useRef } from 'react'
-import LeftPanel from './LeftPanel/LeftPanel'
-import RightPanel from './RightPanel/RightPanel'
+import LeftPanel from './Assets/LeftPanel/LeftPanel'
+import RightPanel from './Assets/RightPanel/RightPanel'
 import Container from 'react-bootstrap/Container'
-import StarterPanel from './StarterPanel/StarterPanel'
+import StarterPanel from './Assets/StarterPanel/StarterPanel'
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const io = require('socket.io-client');
 const socket = io('127.0.0.1:8000', { autoConnect: false });
+
+const getTimeOfMessage = () => {
+  let date = new Date();
+  let parsedDate = `${date.getHours()}:${date.getMinutes()}`;
+  return parsedDate;
+};
 
 const App = () => {
   const [username, setName] = useState('default');
@@ -57,7 +63,8 @@ const App = () => {
   };
 
   const onMessageSend = (text) => {
-    const temporaryList = [{sender: 'You', type: 'user', message: text}];
+    let time = getTimeOfMessage();
+    const temporaryList = [{sender: 'You', type: 'user', message: text, time: time}];
     setMessageList(messageList => ([...messageList, ...temporaryList]));
     let nameAndSid = `${username}(${socket.id})`;
     let message = {senderName: nameAndSid, data: text};
@@ -65,9 +72,10 @@ const App = () => {
   };
 
   const onMessageGet = (data) => {
-    const temporaryList = [{sender: data.senderName, type: 'guest', message: data.data}];
+    let time = getTimeOfMessage();
+    const temporaryList = [{sender: data.senderName, type: 'guest', message: data.data, time: time}];
     setMessageList(messageList => ([...messageList, ...temporaryList]));
-  }
+  };
 
   const SendConnectionRequest = (index) => {
     const data = listOfConnections[index].sid;
@@ -80,7 +88,7 @@ const App = () => {
     setIsNameSet(true);
     socket.emit('name', user);
     socket.emit('connections');
-  }
+  };
 
   return(
     <Container fluid>
