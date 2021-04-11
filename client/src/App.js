@@ -1,9 +1,11 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState } from 'react'
 import LeftPanel from './Assets/LeftPanel/LeftPanel'
 import RightPanel from './Assets/RightPanel/RightPanel'
 import Container from 'react-bootstrap/Container'
 import StarterPanel from './Assets/StarterPanel/StarterPanel'
 import 'bootstrap/dist/css/bootstrap.min.css';
+// import LoggerBox from './Assets/LoggerBox/LoggerBox'
+// import {CSSTransition} from 'react-transition-group';
 
 const io = require('socket.io-client');
 const socket = io('127.0.0.1:8000', { autoConnect: false });
@@ -17,9 +19,10 @@ const getTimeOfMessage = () => {
 const App = () => {
   const [username, setName] = useState('default');
   const [isNameSet, setIsNameSet] = useState(false);
-  const [videoOn, setVideoOn] = useState(true);
+  const [videoOn, setVideoOn] = useState(false);
   const [messageList, setMessageList] = useState([]);
   const [listOfConnections, setListOfConnections] = useState([]);
+  const [isLoggerBoxShowed, setLoggerBox] = useState(false);
 
   useEffect(() => {
     socket.on('connect', () => {
@@ -83,23 +86,51 @@ const App = () => {
   };
 
   const setUserName = (user) => {
-    socket.connect();
+    // socket.connect();
     setName( username => (username, user) );
     setIsNameSet(true);
     socket.emit('name', user);
     socket.emit('connections');
   };
 
+
+
+  // const showLoggerBox = () => {
+  //   console.log("Show logger box");
+  //   setLoggerBox(true);
+  //   setTimeout(timeoutForLoggerBox, 5000);
+  // };
+
+  // const timeoutForLoggerBox = () => {
+  //   console.log("close logger box");
+  //   setLoggerBox(false);
+  // };
+
+
   return(
     <Container fluid>
-      {
+
+    {/* <CSSTransition
+      in={isLoggerBoxShowed}
+      timeout={350}
+      classNames="display"
+      unmountOnExit
+    >
+      <LoggerBox />
+    </CSSTransition> */}
+
+      {/* {
         isNameSet ?
         <div className = 'row vh-100'>
           <LeftPanel connections={listOfConnections} sendRequest={SendConnectionRequest} />
           <RightPanel onVideoButtonClick={onButtonClickHandler} onSendButtonClick={(text) => onMessageSend(text)} videoOn={videoOn} messageList={messageList}/>
         </div>
         : <StarterPanel OnClick={(user) => setUserName(user)}></StarterPanel>
-      }
+      } */}
+        <div className = 'row vh-100'>
+          <LeftPanel connections={listOfConnections} sendRequest={SendConnectionRequest} />
+          <RightPanel onVideoButtonClick={onButtonClickHandler} onSendButtonClick={(text) => onMessageSend(text)} videoOn={videoOn} messageList={messageList}/>
+        </div>
     </Container>
   );
 }

@@ -1,5 +1,5 @@
 import React from 'react'
-import Video from '../Video'
+import VideoArea from './VideoArea/VideoArea'
 import classes from './RightPanel.module.css'
 import Button from 'react-bootstrap/Button'
 import FormGroup from 'react-bootstrap/FormGroup'
@@ -27,12 +27,12 @@ const RightPanel = (props) => {
     
     return(
         <div className = {style}>
-            {/* <div className='row'>
-                <Video videoOn = {props.videoOn} />
+            <div className='row h-75'>
+                <div className='col'>
+                    <VideoArea videoOn = {props.videoOn} />
+                </div>
+                
             </div>
-            <div className='row' style={styleButtonRow}>
-                <Button onClick={props.onVideoButtonClick}> {props.videoOn ? 'hide' : 'show'} video</Button>
-            </div> */}
             <div className='row' >
                 <div className='overflow-auto' style={overflowStyle}>
                 {

@@ -16,10 +16,14 @@ const Video = (props) => {
             });
         }
         else {
-            const tracks = stream.current.getTracks();
-            tracks.forEach(function(track) {
-                track.stop();
-            });
+            try{
+                const tracks = stream.current.getTracks();
+                tracks.forEach(function(track) {
+                    track.stop();
+                });
+            } catch (e) {
+                console.log(e);
+            }
         }
     }, [props.videoOn]);
 
