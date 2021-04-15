@@ -27,11 +27,13 @@ const RightPanel = (props) => {
     
     return(
         <div className = {style}>
-            <div className='row h-75'>
+            <div className='row'>
                 <div className='col'>
                     <VideoArea videoOn = {props.videoOn} />
                 </div>
-                
+            </div>
+            <div className='row' style={styleButtonRow}>
+                {/* <Button onClick={props.onVideoButtonClick}> {props.videoOn ? 'hide' : 'show'} video</Button> */}
             </div>
             <div className='row' >
                 <div className='overflow-auto' style={overflowStyle}>
