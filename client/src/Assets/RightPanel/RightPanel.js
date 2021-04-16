@@ -48,7 +48,7 @@ const RightPanel = (props) => {
             </div>
             <div className='row'>
                 <FormGroup style={formGroupStype}>
-                    <textarea className="form-control"></textarea>
+                    <textarea maxLength='1000' className="form-control"></textarea>
                 </FormGroup>
             </div>
             <div className='row' style={styleButtonRowRight}>

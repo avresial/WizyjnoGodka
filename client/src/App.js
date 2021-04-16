@@ -11,7 +11,10 @@ const socket = io('127.0.0.1:8000', { autoConnect: false });
 
 const getTimeOfMessage = () => {
   let date = new Date();
-  let parsedDate = `${date.getHours()}:${date.getMinutes()}`;
+  let hour = ('0' + date.getHours()).slice(-2);
+  let minute = ('0' + date.getMinutes()).slice(-2);
+  let second = ('0' + date.getSeconds()).slice(-2);
+  let parsedDate = `${hour}:${minute}:${second}`;
   return parsedDate;
 };
 
@@ -65,12 +68,17 @@ const App = () => {
   };
 
   const onMessageSend = (text) => {
-    let time = getTimeOfMessage();
-    const temporaryList = [{sender: 'You', type: 'user', message: text, time: time}];
-    setMessageList(messageList => ([...messageList, ...temporaryList]));
-    let nameAndSid = `${yourUserName}(${socket.id})`;
-    let message = {senderName: nameAndSid, data: text};
-    socket.emit('chat', message);
+    if (!text) {
+      appendNewLog(`Message cannot be empty!`);
+    }
+    else {
+      let time = getTimeOfMessage();
+      const temporaryList = [{sender: 'You', type: 'user', message: text, time: time}];
+      setMessageList(messageList => ([...messageList, ...temporaryList]));
+      let nameAndSid = `${yourUserName}(${socket.id})`;
+      let message = {senderName: nameAndSid, data: text};
+      socket.emit('chat', message);
+    }
   };
 
   const onMessageGet = (data) => {
@@ -85,22 +93,31 @@ const App = () => {
   };
 
   const setUserName = (userName) => {
-    socket.connect();
-    setName( yourUserName => {
-      yourUserName = userName;
-    });
-    setIsNameSet(true);
-    socket.emit('name', userName);
-    socket.emit('connections');
+    if (!userName) {
+      appendNewLog(`Name cannot be empty!`);
+    } else {
+      socket.connect();
+      setName( yourUserName => {
+        yourUserName = userName;
+      });
+      setIsNameSet(true);
+      socket.emit('name', userName);
+      socket.emit('connections');
+    }
   };
 
   useEffect( () => {
     if (!logTimeout.current) {
-      logTimeout.current = setTimeout(popFrontLogList, 5000);
+      if (logList.length > 0)
+      {
+        console.log("set timeout!");
+        logTimeout.current = setTimeout(popFrontLogList, 5000);
+      }
     }
   }, [logList])
 
   const popFrontLogList = () => {
+    console.log("popped!");
     setLogList(logList => {
       const tempLogList = [...logList];
       logTimeout.current = null;
