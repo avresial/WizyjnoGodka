@@ -33,7 +33,7 @@ const RightPanel = (props) => {
                 </div>
             </div>
             <div className='row' style={styleButtonRow}>
-                {/* <Button onClick={props.onVideoButtonClick}> {props.videoOn ? 'hide' : 'show'} video</Button> */}
+                <Button onClick={props.onVideoButtonClick}> {props.videoOn ? 'hide' : 'show'} video</Button>
             </div>
             <div className='row' >
                 <div className='overflow-auto' style={overflowStyle}>

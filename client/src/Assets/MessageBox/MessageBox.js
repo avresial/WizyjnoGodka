@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import MessageBoxGuest from './MessageBoxGuest/MessageBoxGuest'
 import MessageBoxUser from './MessageBoxUser/MessageBoxUser'
 

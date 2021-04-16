@@ -1,14 +1,23 @@
-import react from 'react'
+import React from 'react'
 import classes from './LoggerBox.module.css'
 
-const LoggerBox = () => {
+const LoggerBox = (props) => {
+
+    let isVisible = false;
+    if( props.itemsCount > 1)
+    {
+        isVisible = true;
+    }
 
     return(
         <div className={classes.LoggerBox}>
-            <div className={classes.exitButton}>
-            </div>
+            {
+                isVisible 
+                ? <div className={classes.exitButton}>{props.itemsCount}</div>
+                : null
+            }
             <span>
-                Information about Logger something.
+                {props.children}
             </span>
         </div>
     );

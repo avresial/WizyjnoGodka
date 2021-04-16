@@ -1,7 +1,6 @@
 import React from 'react'
 import User from './User/User'
 import classes from './LeftPanel.module.css'
-import Button from 'react-bootstrap/Button'
 
 const LeftPanel = (props) => {
     const style = `${classes.LeftPanel} col-md-4`

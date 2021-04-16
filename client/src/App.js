@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import LeftPanel from './Assets/LeftPanel/LeftPanel'
 import RightPanel from './Assets/RightPanel/RightPanel'
 import Container from 'react-bootstrap/Container'
 import StarterPanel from './Assets/StarterPanel/StarterPanel'
 import 'bootstrap/dist/css/bootstrap.min.css';
-// import LoggerBox from './Assets/LoggerBox/LoggerBox'
-// import {CSSTransition} from 'react-transition-group';
+import LoggerBox from './Assets/LoggerBox/LoggerBox'
 
 const io = require('socket.io-client');
 const socket = io('127.0.0.1:8000', { autoConnect: false });
@@ -17,16 +16,16 @@ const getTimeOfMessage = () => {
 };
 
 const App = () => {
-  const [username, setName] = useState('default');
+  const [yourUserName, setName] = useState('default');
   const [isNameSet, setIsNameSet] = useState(false);
   const [videoOn, setVideoOn] = useState(false);
   const [messageList, setMessageList] = useState([]);
   const [listOfConnections, setListOfConnections] = useState([]);
-  const [isLoggerBoxShowed, setLoggerBox] = useState(false);
+  const [logList, setLogList] = useState([]);
+  const logTimeout = useRef();
 
   useEffect(() => {
     socket.on('connect', () => {
-      console.log('Your socket id: ', socket.id);
     });
   
     socket.on('message', (data) => {
@@ -41,16 +40,17 @@ const App = () => {
     socket.on('add-connection', (data) => {
       const parsedData = JSON.parse(data);
       const newConnection = [{sid: parsedData.sid, name: parsedData.name}];
+      appendNewLog(`${parsedData.sid} connected to the server`);
       setListOfConnections(listOfConnections => ([...listOfConnections, ...newConnection]));
     });
   
     socket.on('remove-connection', (sid) => {
+      appendNewLog(`${sid} disconnected from the server`);
       setListOfConnections(listOfConnections => {
         const tempList = [...listOfConnections];
         tempList.map( (connection, index) => {
           if (connection.sid === sid)
           {
-            console.log('removed');
             tempList.splice(index, 1);
           }
           return 0;
@@ -58,7 +58,6 @@ const App = () => {
         return tempList;
       });
     });
-
   }, []);
 
   const onButtonClickHandler = () => {
@@ -69,7 +68,7 @@ const App = () => {
     let time = getTimeOfMessage();
     const temporaryList = [{sender: 'You', type: 'user', message: text, time: time}];
     setMessageList(messageList => ([...messageList, ...temporaryList]));
-    let nameAndSid = `${username}(${socket.id})`;
+    let nameAndSid = `${yourUserName}(${socket.id})`;
     let message = {senderName: nameAndSid, data: text};
     socket.emit('chat', message);
   };
@@ -85,52 +84,56 @@ const App = () => {
     socket.emit('send-invitation', data);
   };
 
-  const setUserName = (user) => {
-    // socket.connect();
-    setName( username => (username, user) );
+  const setUserName = (userName) => {
+    socket.connect();
+    setName( yourUserName => {
+      yourUserName = userName;
+    });
     setIsNameSet(true);
-    socket.emit('name', user);
+    socket.emit('name', userName);
     socket.emit('connections');
   };
 
+  useEffect( () => {
+    if (!logTimeout.current) {
+      logTimeout.current = setTimeout(popFrontLogList, 5000);
+    }
+  }, [logList])
 
+  const popFrontLogList = () => {
+    setLogList(logList => {
+      const tempLogList = [...logList];
+      logTimeout.current = null;
+      tempLogList.shift();
+      logList = tempLogList;
+      return logList;
+    });
+  }; 
 
-  // const showLoggerBox = () => {
-  //   console.log("Show logger box");
-  //   setLoggerBox(true);
-  //   setTimeout(timeoutForLoggerBox, 5000);
-  // };
-
-  // const timeoutForLoggerBox = () => {
-  //   console.log("close logger box");
-  //   setLoggerBox(false);
-  // };
-
+  const appendNewLog = (text) => {
+    setLogList(logList => {
+      const tempLogList = [...logList];
+      tempLogList.push(text);
+      logList = tempLogList;
+      return logList;
+    })
+  };
 
   return(
     <Container fluid>
-
-    {/* <CSSTransition
-      in={isLoggerBoxShowed}
-      timeout={350}
-      classNames="display"
-      unmountOnExit
-    >
-      <LoggerBox />
-    </CSSTransition> */}
-
-      {/* {
+      {
+        logList.length > 0
+          ? <LoggerBox itemsCount={logList.length}>{logList[0]}</LoggerBox>
+          : null
+      }
+      {
         isNameSet ?
         <div className = 'row vh-100'>
           <LeftPanel connections={listOfConnections} sendRequest={SendConnectionRequest} />
           <RightPanel onVideoButtonClick={onButtonClickHandler} onSendButtonClick={(text) => onMessageSend(text)} videoOn={videoOn} messageList={messageList}/>
         </div>
-        : <StarterPanel OnClick={(user) => setUserName(user)}></StarterPanel>
-      } */}
-        <div className = 'row vh-100'>
-          <LeftPanel connections={listOfConnections} sendRequest={SendConnectionRequest} />
-          <RightPanel onVideoButtonClick={onButtonClickHandler} onSendButtonClick={(text) => onMessageSend(text)} videoOn={videoOn} messageList={messageList}/>
-        </div>
+        : <StarterPanel OnClick={(userName) => setUserName(userName)}></StarterPanel>
+      }
     </Container>
   );
 }

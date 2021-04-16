@@ -3,7 +3,7 @@ import Video from './Video'
 import classes from './VideoArea.module.css'
 
 const VideoArea = (props) => {
-    const [listOfVideos, setlistOfVideos] = useState(['#FF0000', '#FF0000', '#FF0000', '#FF0000']);
+    const [listOfVideos, setlistOfVideos] = useState(['own_video']);
 
     const stream = useRef();
     const userVideo = useRef();
@@ -33,11 +33,9 @@ const VideoArea = (props) => {
     return (
         <div className={`row ${classes.VideoArea}`}>
             {
-                listOfVideos.map((currentItem) => {
+                listOfVideos.map((currentItem, index) => {
                     return(
-                        <div className="col">
-                            {/* <Video videoOn = {props.videoOn} userVideo = {userVideo} ></Video> */}
-                        </div>
+                        <Video key = {index} videoOn = {props.videoOn} userVideo = {userVideo} ></Video>
                     );
                 })
             }
