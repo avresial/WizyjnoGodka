@@ -1,4 +1,4 @@
-import React from 'react'
+import React, {useEffect, useRef} from 'react'
 import VideoArea from './VideoArea/VideoArea'
 import classes from './RightPanel.module.css'
 import Button from 'react-bootstrap/Button'
@@ -7,6 +7,7 @@ import MessageBox from '../MessageBox/MessageBox'
 
 const RightPanel = (props) => {
     const style = `${classes.RightPanel} col-md-8`;
+    const overflowArea = useRef();
 
     const styleButtonRow = {
         justifyContent: 'center'
@@ -25,6 +26,11 @@ const RightPanel = (props) => {
         maxHeight: '400px'
     };
     
+    useEffect(() => {
+        let scrollArea = overflowArea.current;
+        scrollArea.scrollTop = scrollArea.scrollHeight;
+    }, [props.messageList]);
+
     return(
         <div className = {style}>
             <div className='row'>
@@ -36,7 +42,7 @@ const RightPanel = (props) => {
                 <Button onClick={props.onVideoButtonClick}> {props.videoOn ? 'hide' : 'show'} video</Button>
             </div>
             <div className='row' >
-                <div className='overflow-auto' style={overflowStyle}>
+                <div ref={overflowArea} className='overflow-auto' style={overflowStyle} >
                 {
                     props.messageList.map((currentElement, index) => {
                         return(
