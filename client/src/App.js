@@ -149,7 +149,9 @@ const App = () => {
           <LeftPanel connections={listOfConnections} sendRequest={SendConnectionRequest} />
           <RightPanel onVideoButtonClick={onButtonClickHandler} onSendButtonClick={(text) => onMessageSend(text)} videoOn={videoOn} messageList={messageList}/>
         </div>
-        : <StarterPanel OnClick={(userName) => setUserName(userName)}></StarterPanel>
+        : <div className = 'row vh-100'>
+          <StarterPanel OnClick={(userName) => setUserName(userName)}></StarterPanel>
+          </div>
       }
     </Container>
   );
