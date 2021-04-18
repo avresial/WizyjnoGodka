@@ -4,10 +4,13 @@ import classes from './RightPanel.module.css'
 import Button from 'react-bootstrap/Button'
 import FormGroup from 'react-bootstrap/FormGroup'
 import MessageBox from '../MessageBox/MessageBox'
+import {KeyPress} from '../Helpers/KeyEvents'
 
 const RightPanel = (props) => {
     const style = `${classes.RightPanel} col-md-8`;
     const overflowArea = useRef();
+    const sendButtonRef = useRef();
+    const textAreaRef = useRef();
 
     const styleButtonRow = {
         justifyContent: 'center'
@@ -30,6 +33,10 @@ const RightPanel = (props) => {
         let scrollArea = overflowArea.current;
         scrollArea.scrollTop = scrollArea.scrollHeight;
     }, [props.messageList]);
+
+    useEffect(() => {
+        KeyPress(sendButtonRef.current, textAreaRef.current);
+    }, []);
 
     return(
         <div className = {style}>
@@ -54,11 +61,11 @@ const RightPanel = (props) => {
             </div>
             <div className='row'>
                 <FormGroup style={formGroupStype}>
-                    <textarea maxLength='1000' className="form-control"></textarea>
+                    <textarea ref={textAreaRef} maxLength='1000' className="form-control"></textarea>
                 </FormGroup>
             </div>
             <div className='row' style={styleButtonRowRight}>
-                <Button onClick={() => { props.onSendButtonClick(
+                <Button ref={sendButtonRef} onClick={() => { props.onSendButtonClick(
                     document.getElementsByClassName('form-control')[0].value); 
                     document.getElementsByClassName('form-control')[0].value = '';
                     }}>Send</Button>

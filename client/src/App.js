@@ -97,9 +97,7 @@ const App = () => {
       appendNewLog(`Name cannot be empty!`);
     } else {
       socket.connect();
-      setName( yourUserName => {
-        yourUserName = userName;
-      });
+      setName(userName);
       setIsNameSet(true);
       socket.emit('name', userName);
       socket.emit('connections');
@@ -110,14 +108,12 @@ const App = () => {
     if (!logTimeout.current) {
       if (logList.length > 0)
       {
-        console.log("set timeout!");
         logTimeout.current = setTimeout(popFrontLogList, 5000);
       }
     }
   }, [logList])
 
   const popFrontLogList = () => {
-    console.log("popped!");
     setLogList(logList => {
       const tempLogList = [...logList];
       logTimeout.current = null;
