@@ -1,7 +1,18 @@
 from aiohttp import web
 import socketio
 from User import user_list
+import json
 
+class Invitation:
+    # Sender is client who sends "send-invitation" event, receiver is a client to be invated
+    def __init__(self,sender_sid, receiver_sid):
+        self.sender_sid = sender_sid
+        self.receiver_sid = receiver_sid
+
+
+class EncodeInvitation(json.JSONEncoder):
+    def default(self, o):
+        return o.__dict__
 
 ROOM = 'All'
 users_list = user_list.UserList()
@@ -14,7 +25,7 @@ sio.attach(app)
 
 @sio.event
 async def connect(sid, environ):
-    sio.enter_room(sid, rooms_list[0])
+    #sio.enter_room(sid, rooms_list[0])
     print('Connected', sid)
     print("rooms_list: ",rooms_list)
     users_list.append_new_user(sid)
@@ -62,31 +73,52 @@ async def pass_name(sid, name):
 # Sender is client who sends "send-invitation" event, receiver is a client to be invated
 @sio.on('send-invitation')
 async def send_invitation(sender_sid, receiver_sid):
+    print("EVENT - send-invitation ")
     print("sender_sid", sender_sid,"receiver_sid",receiver_sid )
-    invitations_list.append(Invitation(receiver_sid, sender_sid))
-    await sio.emit('receive-invite', data=sid, to=receiver_sid)
+    invitations_list.append(Invitation(sender_sid,receiver_sid))
+    str = json.dumps(Invitation(sender_sid, receiver_sid), indent=2, cls=EncodeInvitation)
+    await sio.emit('receive-invite', data=str, to=receiver_sid)
 
 # Sender is client who sends "send-invitation" event, receiver is a client to be invated
 @sio.on('accept-invitation')
-async def accept_invitation(sender_sid, receiver_sid, data):
-    if data == 'Accepted':
-        if(invitations_list.__contains__(Invitation(receiver_sid, sender_sid))):
+async def accept_invitation(sid,data):
+    print("EVENT - accept-invitation ")
+
+    tererere = json.loads(data)
+    receiver_sid = tererere["receiver_sid"]
+    sender_sid = tererere["sender_sid"]
+   
+
+    for invitation in invitations_list:
+        if invitation.sender_sid == sender_sid and invitation.receiver_sid == receiver_sid:
             print("Accepted invitation")
-            remove_from_all_rooms(sender_sid)
-            rooms_list.append(str(sender_sid))
-            sio.enter_room(sender_sid, f"{sender_sid}-room")
-            remove_from_all_rooms(receiver_sid)
-            sio.enter_room(receiver_sid, f"{sender_sid}-room")
-        else:
-            print("No invitation on invitations list :c")
-    else:
-        print("Invitation not accepted")
-        await sio.emit('log', data='', to=receiver_sid)
+            print("")
+            print("sender_sid", sender_sid)
+            print("len(sio.rooms(sender_sid))", len(sio.rooms(sender_sid)))
+            print("sio.rooms(sender_sid)", sio.rooms(sender_sid))
+
+            if len(sio.rooms(sender_sid)) > 1:
+                print("adding receiver sid to already existed room")
+                remove_from_all_rooms(receiver_sid)
+                sio.enter_room(receiver_sid, sio.rooms(sender_sid)[1])#potencjalnie tu jest błąd
+                print("sio.rooms(sender_sid)", sio.rooms(sender_sid))
+                print("sio.rooms(receiver_sid)", sio.rooms(receiver_sid))
+            else:
+                print("adding receiver sid to newly created room")
+                newRoom = str(sender_sid + "room")
+                rooms_list.append(newRoom)
+                sio.enter_room(sender_sid, newRoom)
+                remove_from_all_rooms(receiver_sid)
+                sio.enter_room(receiver_sid, newRoom)
+                print("sio.rooms(sender_sid)", sio.rooms(sender_sid))
+                print("sio.rooms(receiver_sid)", sio.rooms(receiver_sid))
+        
+    print("")             
 
 # Sender is client who sends "send-invitation" event, receiver is a client to be invated
 @sio.on('decline-invitation')
-async def decline_invitation( sender_sid, receiver_sid, data):
-    print("Invitation declined")
+async def decline_invitation(data):
+    print("EVENT - decline-invitation ")
     invitations_list.remove(Invitation)
 
 def remove_from_all_rooms(sid):
@@ -100,10 +132,6 @@ def start_server():
     print("Server started")
     web.run_app(app, port=8000)
 
-class Invitation:
-    # Sender is client who sends "send-invitation" event, receiver is a client to be invated
-    def __init__(self,sender_sid, receiver_sid):
-        self.sender_sid = sender_sid
-        self.receiver_sid = receiver_sid
+
 
 
