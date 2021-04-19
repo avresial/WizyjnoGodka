@@ -42,7 +42,7 @@ const RightPanel = (props) => {
         <div className = {style}>
             <div className='row'>
                 <div className='col'>
-                    <VideoArea videoOn = {props.videoOn} />
+                    <VideoArea streamRef={props.streamRef} secondStreamRef={props.secondStreamRef} videoOn = {props.videoOn} videoSecondOn = {props.videoSecondOn} />
                 </div>
             </div>
             <div className='row' style={styleButtonRow}>
