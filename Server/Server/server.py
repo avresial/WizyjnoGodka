@@ -5,9 +5,11 @@ from User import user_list
 
 ROOM = 'room'
 users_list = user_list.UserList()
+invitations_list = []
 sio = socketio.AsyncServer(cors_allowed_origins='*')
 app = web.Application()
 sio.attach(app)
+
 
 
 @sio.event
@@ -53,21 +55,28 @@ async def pass_name(sid, name):
             break
 
 
+# Sender is client who sends "send-invitation" event, receiver is a client to be invated
 @sio.on('send-invitation')
-async def send_invitation(sid, invited_sid):
-    await sio.emit('receive-invite', data=sid, to=invited_sid)
+async def send_invitation(sender_sid, receiver_sid):
+    invitations_list.append(Invitation(receiver_sid, sender_sid))
+    await sio.emit('receive-invite', data=sid, to=receiver_sid)
 
-
+# Sender is client who sends "send-invitation" event, receiver is a client to be invated
 @sio.on('accept-invitation')
-async def accept_invitation(invited_sid, invitation_sender_sid, data):
+async def accept_invitation(sender_sid, receiver_sid, data):
     if data == 'Accepted':
-        remove_from_all_rooms(invitation_sender_sid)
-        sio.enter_room(invitation_sender_sid, f"{invitation_sender_sid}-room")
-        remove_from_all_rooms(invited_sid)
-        sio.enter_room(invited_sid, f"{invitation_sender_sid}-room")
+        if(invitations_list.__contains__(Invitation(receiver_sid, sender_sid))):
+            remove_from_all_rooms(sender_sid)
+            sio.enter_room(sender_sid, f"{sender_sid}-room")
+            remove_from_all_rooms(receiver_sid)
+            sio.enter_room(receiver_sid, f"{sender_sid}-room")
     else:
-        await sio.emit('log', data='', to=invited_sid)
+        await sio.emit('log', data='', to=receiver_sid)
 
+# Sender is client who sends "send-invitation" event, receiver is a client to be invated
+@sio.on('decline-invitation')
+async def decline_invitation( sender_sid, receiver_sid, data):
+    invitations_list.remove(Invitation)
 
 def remove_from_all_rooms(sid):
     for room in sio.rooms(sid):
@@ -76,5 +85,11 @@ def remove_from_all_rooms(sid):
 
 def start_server():
     web.run_app(app, port=8000)
+
+class Invitation:
+    # Sender is client who sends "send-invitation" event, receiver is a client to be invated
+    def __init__(self,sender_sid, receiver_sid):
+        self.sender_sid = sender_sid
+        self.receiver_sid = receiver_sid
 
 
