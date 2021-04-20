@@ -12,6 +12,8 @@ class Invitation:
 
 sio = socketio.Client()
 
+print("starting time: ",time.strftime("%H:%M:%S", time.localtime()))
+
 @sio.event
 def connect():
     print('connection established')
@@ -31,7 +33,7 @@ def connections(data):
     print("")
 
     #klient zaprasza nowych userów
-    #time.sleep(2)
+    
     #sio.emit("send-invitation", new_user["sid"])
     #print('Sent invitation to: ', new_user["sid"])
     
@@ -40,7 +42,7 @@ def connections(data):
 def connections(data):
     print("EVENT - connections")
     connections = json.loads(data)
-    print('connections Json is as follows:')
+    print('connections Json is as follows:', connections)
     
 
 
@@ -48,11 +50,17 @@ def connections(data):
 def connections(data):
     print("EVENT - receive-invite")
     received_invitation = json.loads(data)
-    sio.emit("accept-invitation", data)
-    print('accepted invitation from: ', received_invitation["sender_sid"])
+    sio.emit("decline-invitation", data)
+    print('declined invitation from: ', received_invitation["sender_sid"])
+    #sio.emit("accept-invitation", data)
+    #print('accepted invitation from: ', received_invitation["sender_sid"])
    
+
+
 sio.connect('http://localhost:8000')
 
-sio.emit("name", "TestNamekurde-" + str(random.randint(0,100)))
+myNameIs = "TestNamekurde-" + str(random.randint(0,100))
+print("myNameIs:",myNameIs)
+sio.emit("name", myNameIs)
 
 sio.emit("connections")

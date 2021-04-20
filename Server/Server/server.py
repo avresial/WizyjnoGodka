@@ -2,6 +2,7 @@ from aiohttp import web
 import socketio
 from User import user_list
 import json
+import time
 
 class Invitation:
     # Sender is client who sends "send-invitation" event, receiver is a client to be invated
@@ -84,15 +85,14 @@ async def send_invitation(sender_sid, receiver_sid):
 async def accept_invitation(sid,data):
     print("EVENT - accept-invitation ")
 
-    tererere = json.loads(data)
-    receiver_sid = tererere["receiver_sid"]
-    sender_sid = tererere["sender_sid"]
+    new_data = json.loads(data)
+    receiver_sid = new_data["receiver_sid"]
+    sender_sid = new_data["sender_sid"]
    
-
     for invitation in invitations_list:
         if invitation.sender_sid == sender_sid and invitation.receiver_sid == receiver_sid:
-            print("Accepted invitation")
             print("")
+            print("Accepted invitation")
             print("sender_sid", sender_sid)
             print("len(sio.rooms(sender_sid))", len(sio.rooms(sender_sid)))
             print("sio.rooms(sender_sid)", sio.rooms(sender_sid))
@@ -100,9 +100,13 @@ async def accept_invitation(sid,data):
             if len(sio.rooms(sender_sid)) > 1:
                 print("adding receiver sid to already existed room")
                 remove_from_all_rooms(receiver_sid)
-                sio.enter_room(receiver_sid, sio.rooms(sender_sid)[1])#potencjalnie tu jest błąd
+                if sio.rooms(sender_sid)[0] != sender_sid:
+                    sio.enter_room(receiver_sid, sio.rooms(sender_sid)[0])
+                else:
+                     sio.enter_room(receiver_sid, sio.rooms(sender_sid)[1])
                 print("sio.rooms(sender_sid)", sio.rooms(sender_sid))
                 print("sio.rooms(receiver_sid)", sio.rooms(receiver_sid))
+                break
             else:
                 print("adding receiver sid to newly created room")
                 newRoom = str(sender_sid + "room")
@@ -112,21 +116,32 @@ async def accept_invitation(sid,data):
                 sio.enter_room(receiver_sid, newRoom)
                 print("sio.rooms(sender_sid)", sio.rooms(sender_sid))
                 print("sio.rooms(receiver_sid)", sio.rooms(receiver_sid))
-        
+                break
     print("")             
 
 # Sender is client who sends "send-invitation" event, receiver is a client to be invated
 @sio.on('decline-invitation')
-async def decline_invitation(data):
+async def decline_invitation(sid, data):
     print("EVENT - decline-invitation ")
-    invitations_list.remove(Invitation)
+    new_data = json.loads(data)
+    for invitation in invitations_list:
+        if invitation.sender_sid == new_data["sender_sid"] and invitation.receiver_sid == new_data["receiver_sid"]:
+            print("removed: ",invitation.sender_sid,invitation.receiver_sid)
+            invitations_list.remove(invitation)
+            for invitation in invitations_list:
+                print(invitation.sender_sid,invitation.receiver_sid)
+
+# Sender is client who sends "send-invitation" event, receiver is a client to be invated
+@sio.on('leave-all-rooms')
+async def decline_invitation(sid):
+    print("EVENT - leave-all-rooms ")
+    remove_from_all_rooms(sid)
 
 def remove_from_all_rooms(sid):
     print(sid, " is being removed")
     for room in sio.rooms(sid):
         if room != sid:
             sio.leave_room(sid, room)
-
 
 def start_server():
     print("Server started")
