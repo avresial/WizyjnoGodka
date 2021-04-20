@@ -26,59 +26,78 @@ sio.attach(app)
 
 @sio.event
 async def connect(sid, environ):
+    print("EVENT - disconnect ")
     #sio.enter_room(sid, rooms_list[0])
-    print('Connected', sid)
-    print("rooms_list: ",rooms_list)
+    print(" ",'Connected', sid)
+    print(" ","rooms_list: ",rooms_list)
     users_list.append_new_user(sid)
-    
+    print("END EVENT")
+    print(" ") 
 
 @sio.event
 async def disconnect(sid):
+    print("EVENT - disconnect ")
     users_list.remove_user(sid)
     await sio.emit('remove-connection', data=sid, skip_sid=sid)
     for room in sio.rooms(sid):
         sio.leave_room(sid, room)
-    print('Disconnected', sid)
+    print(" ",'Disconnected', sid)
+    print("END EVENT")
+    print(" ") 
 
 
 @sio.on('connections')
 async def get_users(sid):
+    print("EVENT - connections ")
     str = users_list.get_user_list_in_json(sid)
-    print("sending data to ", sid, str)
+    print(" ","sending data to ", sid, str)
     await sio.emit('connections', data=str, to=sid)
+    print("END EVENT")
+    print(" ") 
 
 
 @sio.on('data')
 async def data(sid, data): # data is going to be Video and audio
-    print('Message from {}: {}'.format(sid, data))
+    print("EVENT - data ")
+    print(" ",'Message from {}: {}'.format(sid, data))
     await sio.emit('data', data, room=ROOM, skip_sid=sid)
-
+    print("END EVENT")
+    print(" ") 
 
 @sio.on('chat')
 async def pass_data(sid, message):
-    print("chat message sent - ", message)
+    print("EVENT - chat ")
+    print(" ","chat message sent - ", message)
     await sio.emit('message', data=message, room=ROOM, skip_sid=sid)
-
+    print("END EVENT")
+    print(" ") 
 
 @sio.on('name')
 async def pass_name(sid, name):
-    print(sid,"name set to -", name)
+    print("EVENT - name ")
+    print(" ",sid,"name set to -", name)
     for user in users_list.list_of_users:
         if user.compare(sid):
             user.set_name(name)
             json_object = users_list.parse_user_to_json(user)
             await sio.emit('add-connection', data=json_object, skip_sid=sid)
+            print("END EVENT")
+            print(" ")
             break
+    print("END EVENT")
+    print(" ") 
 
 
 # Sender is client who sends "send-invitation" event, receiver is a client to be invated
 @sio.on('send-invitation')
 async def send_invitation(sender_sid, receiver_sid):
     print("EVENT - send-invitation ")
-    print("sender_sid", sender_sid,"receiver_sid",receiver_sid )
+    print(" ","sender_sid", sender_sid,"receiver_sid",receiver_sid )
     invitations_list.append(Invitation(sender_sid,receiver_sid))
     str = json.dumps(Invitation(sender_sid, receiver_sid), indent=2, cls=EncodeInvitation)
     await sio.emit('receive-invite', data=str, to=receiver_sid)
+    print("END EVENT")
+    print(" ") 
 
 # Sender is client who sends "send-invitation" event, receiver is a client to be invated
 @sio.on('accept-invitation')
@@ -91,33 +110,33 @@ async def accept_invitation(sid,data):
    
     for invitation in invitations_list:
         if invitation.sender_sid == sender_sid and invitation.receiver_sid == receiver_sid:
-            print("")
-            print("Accepted invitation")
-            print("sender_sid", sender_sid)
-            print("len(sio.rooms(sender_sid))", len(sio.rooms(sender_sid)))
-            print("sio.rooms(sender_sid)", sio.rooms(sender_sid))
+            print(" ","Accepted invitation")
+            print(" ","sender_sid", sender_sid)
+            print(" ","len(sio.rooms(sender_sid))", len(sio.rooms(sender_sid)))
+            print(" ","sio.rooms(sender_sid)", sio.rooms(sender_sid))
 
             if len(sio.rooms(sender_sid)) > 1:
-                print("adding receiver sid to already existed room")
+                print(" ","adding receiver sid to already existed room")
                 remove_from_all_rooms(receiver_sid)
                 if sio.rooms(sender_sid)[0] != sender_sid:
                     sio.enter_room(receiver_sid, sio.rooms(sender_sid)[0])
                 else:
                      sio.enter_room(receiver_sid, sio.rooms(sender_sid)[1])
-                print("sio.rooms(sender_sid)", sio.rooms(sender_sid))
-                print("sio.rooms(receiver_sid)", sio.rooms(receiver_sid))
+                print(" ","sio.rooms(sender_sid)", sio.rooms(sender_sid))
+                print(" ","sio.rooms(receiver_sid)", sio.rooms(receiver_sid))
                 break
             else:
-                print("adding receiver sid to newly created room")
+                print(" ","adding receiver sid to newly created room")
                 newRoom = str(sender_sid + str(time.strftime("%H:%M:%S", time.localtime())) + "room")
                 rooms_list.append(newRoom)
                 sio.enter_room(sender_sid, newRoom)
                 remove_from_all_rooms(receiver_sid)
                 sio.enter_room(receiver_sid, newRoom)
-                print("sio.rooms(sender_sid)", sio.rooms(sender_sid))
-                print("sio.rooms(receiver_sid)", sio.rooms(receiver_sid))
+                print(" ","sio.rooms(sender_sid)", sio.rooms(sender_sid))
+                print(" ","sio.rooms(receiver_sid)", sio.rooms(receiver_sid))
                 break
-    print("")             
+    print("END EVENT")
+    print(" ")               
 
 # Sender is client who sends "send-invitation" event, receiver is a client to be invated
 @sio.on('decline-invitation')
@@ -135,10 +154,14 @@ async def decline_invitation(sid, data):
 @sio.on('leave-all-rooms')
 async def decline_invitation(sid):
     print("EVENT - leave-all-rooms ")
+    print(" ",sio.rooms(sid))
     remove_from_all_rooms(sid)
+    print(" ",sio.rooms(sid))
+    print("END event")
+    print(" ") 
 
 def remove_from_all_rooms(sid):
-    print(sid, " is being removed")
+    print(sid, " is being removed from all rooms")
     for room in sio.rooms(sid):
         if room != sid:
             sio.leave_room(sid, room)

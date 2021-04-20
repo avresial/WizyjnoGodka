@@ -54,8 +54,8 @@ def connections(data):
     #print('declined invitation from: ', received_invitation["sender_sid"])
     sio.emit("accept-invitation", data)
     print('accepted invitation from: ', received_invitation["sender_sid"])
+    sio.emit("leave-all-rooms")
    
-
 
 sio.connect('http://localhost:8000')
 
