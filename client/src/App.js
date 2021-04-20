@@ -5,10 +5,8 @@ import Container from 'react-bootstrap/Container'
 import StarterPanel from './Assets/StarterPanel/StarterPanel'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import LoggerBox from './Assets/LoggerBox/LoggerBox'
+import {socket} from './Assets/Context/socket'
 
-const io = require('socket.io-client');
-const socket = io('127.0.0.1:8000', { autoConnect: false });
-const PC_CONFIG = {};
 
 const getTimeOfMessage = () => {
   let date = new Date();
@@ -24,16 +22,13 @@ const App = () => {
   const [yourUserName, setName] = useState('default');
   const [isNameSet, setIsNameSet] = useState(false);
   const [videoOn, setVideoOn] = useState(false);
-  const [videoSecondOn, setVideoSecondOn] = useState(false);
   const [messageList, setMessageList] = useState([]);
   const [listOfConnections, setListOfConnections] = useState([]);
   const [logList, setLogList] = useState([]);
   const logTimeout = useRef();
-  
-  const stream = useRef();
-  const secondStream = useRef();
-
+ 
   useEffect(() => {
+    console.log("USE EFFECT APP JS");
     socket.on('connect', () => {
     });
   
@@ -67,100 +62,7 @@ const App = () => {
         return tempList;
       });
     });
-
-    socket.on('data', (data) => {
-      console.log("Data received");
-      handleSignalingData(data);
-    });
-
-    socket.on('ready', () => {
-      createPeerConnection();
-      sendOffer();
-      console.log('Ready');
-    });
-
-    const sendData = (data) => {
-      socket.emit('data', data);
-    };
-
-    const onIceCandidate = (event) => {
-      if (event.candidate) {
-        console.log('ICE candidate');
-        sendData({
-          type: 'candidate',
-          candidate: event.candidate
-        });
-      }
-    };
-
-    const onAddStream = (event) => {
-      console.log('Add stream');
-      document.getElementById('xd').srcObject = event.stream;
-      setVideoSecondOn(true);
-    };
-
-    let pc;
-    const createPeerConnection = () => {
-      try {
-        pc = new RTCPeerConnection(PC_CONFIG);
-        pc.onicecandidate = onIceCandidate;
-        pc.onaddstream = onAddStream;
-        if (stream.current) {
-          pc.addStream(stream.current);
-        }
-        console.log('PeerConnection created');
-      } catch (error) {
-        console.error('PeerConnection failed: ', error);
-      }
-    };
-
-    const sendOffer = () => {
-      console.log('Send offer');
-      pc.createOffer().then(
-        setAndSendLocalDescription,
-        (error) => { console.error('Send offer failed: ', error); }
-      );
-    };
-    
-    const sendAnswer = () => {
-      console.log('Send answer');
-      pc.createAnswer().then(
-        setAndSendLocalDescription,
-        (error) => { console.error('Send answer failed: ', error); }
-      );
-    };
-    
-    const setAndSendLocalDescription = (sessionDescription) => {
-      pc.setLocalDescription(sessionDescription);
-      console.log('Local description set');
-      sendData(sessionDescription);
-    };
-
-    const handleSignalingData = (data) => {
-      switch (data.type) {
-        case 'offer':
-          createPeerConnection();
-          pc.setRemoteDescription(new RTCSessionDescription(data));
-          sendAnswer();
-          break;
-        case 'answer':
-          pc.setRemoteDescription(new RTCSessionDescription(data));
-          break;
-        case 'candidate':
-          pc.addIceCandidate(new RTCIceCandidate(data.candidate));
-          break;
-      }
-    };
-
-
   }, []);
-
-  // useEffect(() => {
-  //   if (videoOn) {
-  //     createPeerConnection();
-  //     sendOffer();
-  //   }
-  // }, [videoOn]);
 
   const onButtonClickHandler = () => {
     setVideoOn(!videoOn);
@@ -241,9 +143,8 @@ const App = () => {
       {
         isNameSet ?
         <div className = 'row vh-100'>
-          <video playsInline muted id="xd" autoPlay ></video>
           <LeftPanel connections={listOfConnections} sendRequest={SendConnectionRequest} />
-          <RightPanel streamRef={stream} secondStreamRef={secondStream} onVideoButtonClick={onButtonClickHandler} onSendButtonClick={(text) => onMessageSend(text)} videoOn={videoOn} videoSecondOn={videoSecondOn} messageList={messageList}/>
+          <RightPanel onVideoButtonClick={onButtonClickHandler} onSendButtonClick={(text) => onMessageSend(text)} videoOn={videoOn} messageList={messageList}/>
         </div>
         : <div className = 'row vh-100'>
           <StarterPanel OnClick={(userName) => setUserName(userName)}></StarterPanel>
