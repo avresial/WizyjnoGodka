@@ -45,7 +45,6 @@ def connections(data):
     print('connections Json is as follows:', connections)
     
 
-
 @sio.on('receive-invite')
 def connections(data):
     print("EVENT - receive-invite")
@@ -56,7 +55,6 @@ def connections(data):
     print('accepted invitation from: ', received_invitation["sender_sid"])
     sio.emit("leave-all-rooms")
    
-
 sio.connect('http://localhost:8000')
 
 myNameIs = "TestNamekurde-" + str(random.randint(0,100))
