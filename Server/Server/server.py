@@ -57,14 +57,22 @@ async def get_users(sid):
 async def data(sid, data): # data is going to be Video and audio
     print("EVENT - data ")
     print(" ",'Message from {}: {}'.format(sid, data))
-    await sio.emit('data', data, room=ROOM, skip_sid=sid)
+
+    if sio.rooms(sender_sid)[0] != sid:
+        await sio.emit('data', data, room=sio.rooms(sender_sid)[0], skip_sid=sid)
+    else:
+        await sio.emit('data', data, room=sio.rooms(sender_sid)[1], skip_sid=sid)
+    
     print("END event\n") 
 
 @sio.on('chat')
 async def pass_chat_data(sid, message):
     print("EVENT - chat ")
     print(" ","chat message sent - ", message)
-    await sio.emit('message', data=message, room=ROOM, skip_sid=sid)
+    if sio.rooms(sender_sid)[0] != sid:
+        await sio.emit('message', message, room=sio.rooms(sender_sid)[0], skip_sid=sid)
+    else:
+        await sio.emit('message', message, room=sio.rooms(sender_sid)[1], skip_sid=sid)
     print("END event\n") 
 
 @sio.on('name')
