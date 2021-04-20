@@ -50,10 +50,10 @@ def connections(data):
 def connections(data):
     print("EVENT - receive-invite")
     received_invitation = json.loads(data)
-    sio.emit("decline-invitation", data)
-    print('declined invitation from: ', received_invitation["sender_sid"])
-    #sio.emit("accept-invitation", data)
-    #print('accepted invitation from: ', received_invitation["sender_sid"])
+    #sio.emit("decline-invitation", data)
+    #print('declined invitation from: ', received_invitation["sender_sid"])
+    sio.emit("accept-invitation", data)
+    print('accepted invitation from: ', received_invitation["sender_sid"])
    
 
 

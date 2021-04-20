@@ -109,7 +109,7 @@ async def accept_invitation(sid,data):
                 break
             else:
                 print("adding receiver sid to newly created room")
-                newRoom = str(sender_sid + "room")
+                newRoom = str(sender_sid + str(time.strftime("%H:%M:%S", time.localtime())) + "room")
                 rooms_list.append(newRoom)
                 sio.enter_room(sender_sid, newRoom)
                 remove_from_all_rooms(receiver_sid)
