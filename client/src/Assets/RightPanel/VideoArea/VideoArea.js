@@ -4,94 +4,74 @@ import classes from './VideoArea.module.css'
 import {socket, PC_CONFIG} from '../../Context/socket'
 
 const VideoArea = (props) => {
-    const [listOfVideos, setlistOfVideos] = useState(['own_video']);
+    // const [listOfConnections, setlistOfConnections] = useState([]);
     const userVideo = useRef();
     const stream = useRef();
     const guestVideo = useRef();
 
     useEffect( () => {
-        socket.on('data', (data) => {
-            console.log("Data received");
-            handleSignalingData(data);
-          });
+      const peerConnections = {};
+      socket.on("watcher", id => {
+        const peerConnection = new RTCPeerConnection(config);
+        peerConnections[id] = peerConnection;
       
-          socket.on('ready', () => {
-            createPeerConnection();
-            sendOffer();
-            console.log('Ready');
-          });
-      
-          const sendData = (data) => {
-            socket.emit('data', data);
-          };
-      
-          const onIceCandidate = (event) => {
-            if (event.candidate) {
-              console.log('ICE candidate');
-              sendData({
-                type: 'candidate',
-                candidate: event.candidate
-              });
-            }
-          };
-      
-          const onAddStream = (event) => {
-            console.log('Add stream');
-            guestVideo.current.srcObject = event.stream;
-          };
-      
-          let pc;
-          const createPeerConnection = () => {
-            try {
-              pc = new RTCPeerConnection(PC_CONFIG);
-              pc.onicecandidate = onIceCandidate;
-              pc.onaddstream = onAddStream;
-              if (stream.current) {
-                pc.addStream(stream.current);
-              }
-              console.log('PeerConnection created');
-            } catch (error) {
-              console.error('PeerConnection failed: ', error);
-            }
-          };
-      
-          const sendOffer = () => {
-            console.log('Send offer');
-            pc.createOffer().then(
-              setAndSendLocalDescription,
-              (error) => { console.error('Send offer failed: ', error); }
-            );
-          };
+        let stream = video.srcObject;
+        stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
           
-          const sendAnswer = () => {
-            console.log('Send answer');
-            pc.createAnswer().then(
-              setAndSendLocalDescription,
-              (error) => { console.error('Send answer failed: ', error); }
-            );
-          };
-          
-          const setAndSendLocalDescription = (sessionDescription) => {
-            pc.setLocalDescription(sessionDescription);
-            console.log('Local description set');
-            sendData(sessionDescription);
-          };
+        peerConnection.onicecandidate = event => {
+          if (event.candidate) {
+            socket.emit("candidate", id, event.candidate);
+          }
+        };
+       
+        peerConnection
+          .createOffer()
+          .then(sdp => peerConnection.setLocalDescription(sdp))
+          .then(() => {
+            socket.emit("offer", id, peerConnection.localDescription);
+          });
+      });
+
+      socket.on("offer", (id, description) => {
+        peerConnection = new RTCPeerConnection(config);
+        peerConnection
+          .setRemoteDescription(description)
+          .then(() => peerConnection.createAnswer())
+          .then(sdp => peerConnection.setLocalDescription(sdp))
+          .then(() => {
+            socket.emit("answer", id, peerConnection.localDescription);
+          });
+        peerConnection.ontrack = event => {
+          video.srcObject = event.streams[0];
+        };
+        peerConnection.onicecandidate = event => {
+          if (event.candidate) {
+            socket.emit("candidate", id, event.candidate);
+          }
+        };
+      });
+
+      socket.on("connect", () => {
+        socket.emit("watcher");
+      });
+
+      socket.on("broadcaster", () => {
+        socket.emit("watcher");
+      });
       
-          const handleSignalingData = (data) => {
-            switch (data.type) {
-              case 'offer':
-                createPeerConnection();
-                pc.setRemoteDescription(new RTCSessionDescription(data));
-                sendAnswer();
-                break;
-              case 'answer':
-                pc.setRemoteDescription(new RTCSessionDescription(data));
-                break;
-              case 'candidate':
-                pc.addIceCandidate(new RTCIceCandidate(data.candidate));
-                break;
-            }
-          };
+      socket.on("answer", (id, description) => {
+        peerConnections[id].setRemoteDescription(description);
+      });
+      
+      socket.on("candidate", (id, candidate) => {
+        peerConnections[id].addIceCandidate(new RTCIceCandidate(candidate));
+      });
+
+      socket.on("disconnectPeer", id => {
+        peerConnections[id].close();
+        delete peerConnections[id];
+      });
+
     }, []);
 
     useEffect(() => {

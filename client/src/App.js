@@ -133,6 +133,10 @@ const App = () => {
     })
   };
 
+  // window.onunload = window.onbeforeunload = () => {
+  //   socket.close();
+  // };
+
   return(
     <Container fluid>
       {
