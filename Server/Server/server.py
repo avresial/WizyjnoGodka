@@ -1,19 +1,10 @@
 from aiohttp import web
 import socketio
 from User import user_list
+from Invitation import invitation as inv
 import json
 import time
 
-class Invitation:
-    # Sender is client who sends "send-invitation" event, receiver is a client to be invated
-    def __init__(self,sender_sid, receiver_sid):
-        self.sender_sid = sender_sid
-        self.receiver_sid = receiver_sid
-
-
-class EncodeInvitation(json.JSONEncoder):
-    def default(self, o):
-        return o.__dict__
 
 BaseAllRoom = 'All'
 users_list = user_list.UserList()
@@ -95,8 +86,8 @@ async def pass_new_clients_name(sid, name):
 async def send_invitation(sender_sid, receiver_sid):
     print("EVENT - send-invitation ")
     print(" ","sender_sid", sender_sid,"receiver_sid",receiver_sid )
-    invitations_list.append(Invitation(sender_sid,receiver_sid))
-    str = json.dumps(Invitation(sender_sid, receiver_sid), indent=2, cls=EncodeInvitation)
+    invitations_list.append(inv.Invitation(sender_sid,receiver_sid))
+    str = json.dumps(inv.Invitation(sender_sid, receiver_sid), indent=2, cls=inv.EncodeInvitation)
     await sio.emit('receive-invite', data=str, to=receiver_sid)
     print("END event\n") 
 
