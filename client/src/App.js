@@ -5,9 +5,8 @@ import Container from 'react-bootstrap/Container'
 import StarterPanel from './Assets/StarterPanel/StarterPanel'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import LoggerBox from './Assets/LoggerBox/LoggerBox'
+import {socket} from './Assets/Context/socket'
 
-const io = require('socket.io-client');
-const socket = io('127.0.0.1:8000', { autoConnect: false });
 
 const getTimeOfMessage = () => {
   let date = new Date();
@@ -19,6 +18,7 @@ const getTimeOfMessage = () => {
 };
 
 const App = () => {
+  console.log("App rerendered");
   const [yourUserName, setName] = useState('default');
   const [isNameSet, setIsNameSet] = useState(false);
   const [videoOn, setVideoOn] = useState(false);
@@ -26,8 +26,9 @@ const App = () => {
   const [listOfConnections, setListOfConnections] = useState([]);
   const [logList, setLogList] = useState([]);
   const logTimeout = useRef();
-
+ 
   useEffect(() => {
+    console.log("USE EFFECT APP JS");
     socket.on('connect', () => {
     });
   
@@ -131,6 +132,10 @@ const App = () => {
       return logList;
     })
   };
+
+  // window.onunload = window.onbeforeunload = () => {
+  //   socket.close();
+  // };
 
   return(
     <Container fluid>
