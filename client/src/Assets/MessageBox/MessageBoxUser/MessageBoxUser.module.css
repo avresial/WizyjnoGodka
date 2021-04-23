@@ -1,0 +1,35 @@
+.MessageBoxUser{
+    border: 2px solid #ccc;
+    background-color: #0069d9;
+    border-radius: 5px;
+    padding: 10px;
+    margin: 10px 0;
+    width:50%;
+    margin-left:50%;
+    position:relative;
+}
+
+.infoContainer{
+    padding:10px;
+}
+
+.MessageBoxUser span{
+    word-wrap:break-word;
+    color: #e2e6ea;
+}
+
+.time{
+    right:0; 
+    top: 0;
+    margin-right:5px;
+    position:absolute;
+    color: #AAA;
+}
+
+.name{
+    left:0;
+    top: 0;
+    margin-left:5px;
+    position:absolute;
+    color: #AAA;
+}

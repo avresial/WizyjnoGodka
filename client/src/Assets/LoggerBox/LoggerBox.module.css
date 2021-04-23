@@ -1,0 +1,30 @@
+.LoggerBox {
+    position:absolute;
+    z-index: 999;
+    width:400px;
+    height:80px;
+    background-color: rgb(230, 230, 230);
+    border: 1px solid rgb(151, 151, 151);
+    text-align: center;
+    left:0;
+    bottom:0;
+    margin:15px;
+    padding:15px;
+    box-shadow: -5px 5px 15px black;
+}
+
+.exitButton {
+    position:absolute;
+    top:0;
+    right:0;
+    width:25px;
+    height:25px;
+    margin:5px;
+    border-radius: 50%;
+    color:rgb(255, 255, 255);
+    font-size: 90%;
+    text-align: center;
+    vertical-align: middle;
+    cursor: pointer;
+    background-color:rgb(184, 0, 0);
+}

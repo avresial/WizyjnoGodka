@@ -1,0 +1,15 @@
+.StarterPanel{
+    background-color: rgb(192, 192, 192);
+}
+
+.StarterPanelInside{
+    background-color: rgb(167, 167, 167);
+    padding:15px;
+    border:1px solid rgb(134, 134, 134);
+    box-shadow: -1px 5px 15px black;
+    margin-top:15%;
+    margin-left:auto;
+    margin-right:auto;
+    margin-bottom:15%;
+    width:50%;
+}
