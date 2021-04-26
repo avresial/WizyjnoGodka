@@ -5,6 +5,7 @@ import classes from './VideoArea.module.css'
 import {socket, PC_CONFIG} from '../../Context/socket'
 
 const peerConnections = {};
+const senderTracks = {};
 
 const VideoArea = (props) => {
     const userVideo = useRef();
@@ -45,20 +46,37 @@ const VideoArea = (props) => {
                   sendData(dataToSend);
                 }
               };
-              peerConnections[sender_id].onaddstream = (event) => {
+
+              peerConnections[sender_id].ontrack = ({track, streams: [stream]}) => {
+                stream.onremovetrack = (event) => {
+                  setPeerStreams( peerStreams => {
+                    const tempPeerStreams = [...peerStreams];
+                    tempPeerStreams.find( (val, index) => {
+                      if (tempPeerStreams[index].id === sender_id) {
+                        tempPeerStreams.splice(index, 1);
+                      };
+                      return 0;
+                    });
+                    return tempPeerStreams;
+                  });
+                  return 0;
+                };
                 setPeerStreams( peerStreams => {
                   const tempPeerStreams = [...peerStreams];
-                  tempPeerStreams.push(event.stream);
+                  tempPeerStreams.push({id: sender_id, data: stream});
                   return tempPeerStreams;
                 });
-              };
+              }; 
 
               peerConnections[sender_id].onnegotiationneeded = () => {
                 sendOffer(sender_id);
               };
 
               if (stream.current) {
-                pc.addStream(stream.current);
+                const tracks = stream.current.getTracks();
+                tracks.forEach( (track) => {
+                  senderTracks[sender_id] = peerConnections[sender_id].addTrack(track, stream.current);
+                });
                 console.log("Added local stream");
                 setIsStreamSet(true);
               }
@@ -125,8 +143,11 @@ const VideoArea = (props) => {
                 if(userVideo.current) {
                     userVideo.current.srcObject = mediaStream;
                     if (!isStreamSet) {
+                      const tracks = stream.current.getTracks();
                       Object.keys(peerConnections).map(function(key, index) {
-                        peerConnections[key].addStream(stream.current);
+                        tracks.forEach( (track) => {
+                          senderTracks[key] = peerConnections[key].addTrack(track, stream.current);
+                        });
                       });
                       setIsStreamSet(true);
                     }
@@ -138,6 +159,11 @@ const VideoArea = (props) => {
                 const tracks = stream.current.getTracks();
                 tracks.forEach(function(track) {
                     track.stop();
+                    Object.keys(peerConnections).map(function(key, index) {
+                      console.log("REMOVED TRACK");
+                        peerConnections[key].removeTrack(senderTracks[key]);
+                    });
+                    setIsStreamSet(false);
                 });
             } catch (e) {
                 console.log(e);
@@ -151,7 +177,7 @@ const VideoArea = (props) => {
             {
                 peerStreams.map((currentItem, index) => {
                     return(
-                        <VideoGuest key = {index} videoOn = {true} pc={currentItem}></VideoGuest>
+                        <VideoGuest key = {index} videoOn = {true} pc={currentItem.data}></VideoGuest>
                     );
                 })
             }
