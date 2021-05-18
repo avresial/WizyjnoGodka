@@ -51,16 +51,17 @@ const VideoArea = (props) => {
                 stream.onremovetrack = (event) => {
                   setPeerStreams( peerStreams => {
                     const tempPeerStreams = [...peerStreams];
-                    tempPeerStreams.find( (val, index) => {
-                      if (tempPeerStreams[index].id === sender_id) {
+                    tempPeerStreams.map( (streamItem, index) => {
+                      if (streamItem.id === sender_id) {
                         tempPeerStreams.splice(index, 1);
+                        console.log("SPLICED!!!!! ", tempPeerStreams);
                       };
                       return 0;
                     });
                     return tempPeerStreams;
                   });
-                  return 0;
                 };
+                
                 setPeerStreams( peerStreams => {
                   const tempPeerStreams = [...peerStreams];
                   tempPeerStreams.push({id: sender_id, data: stream});
@@ -87,10 +88,8 @@ const VideoArea = (props) => {
           };
       
           const sendOffer = (sender_id) => {
-            console.log('Send offer');
             peerConnections[sender_id].createOffer().then( (offer) => {
               peerConnections[sender_id].setLocalDescription(offer);
-              console.log('Local description set');
               const dataToSend = {
                 type: offer.type,
                 receiver_sid: sender_id,
@@ -102,10 +101,8 @@ const VideoArea = (props) => {
           };
           
           const sendAnswer = (sender_id) => {
-            console.log('Send answer');
             peerConnections[sender_id].createAnswer().then((answer) => {
               peerConnections[sender_id].setLocalDescription(answer);
-              console.log('Local description set');
               const dataToSend = {
                 type: answer.type,
                 receiver_sid: sender_id,
@@ -129,7 +126,6 @@ const VideoArea = (props) => {
                 peerConnections[data.sender_sid].setRemoteDescription(new RTCSessionDescription(data.description));
                 break;
               case 'candidate':
-                console.log("Candidate IN HANDLE");
                 peerConnections[data.sender_sid].addIceCandidate(new RTCIceCandidate(data.candidate));
                 break;
             }
@@ -175,9 +171,9 @@ const VideoArea = (props) => {
         <div className={`row ${classes.VideoArea}`}>
             <Video videoOn = {true} userVideo = {userVideo} ></Video>
             {
-                peerStreams.map((currentItem, index) => {
+                peerStreams.map( currentItem => {
                     return(
-                        <VideoGuest key = {index} videoOn = {true} pc={currentItem.data}></VideoGuest>
+                        <VideoGuest key = {currentItem.id} videoOn = {true} pc={currentItem.data}></VideoGuest>
                     );
                 })
             }
