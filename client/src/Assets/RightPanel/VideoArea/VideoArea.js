@@ -15,25 +15,42 @@ const VideoArea = (props) => {
 
     useEffect( () => {
         socket.on('data', (data) => {
-            console.log("Data received");
             handleSignalingData(data);
           });
 
           socket.on('ready', (data) => {
-            const sender_id = JSON.parse(data).id
-            console.log(sender_id);
+            const sender_id = JSON.parse(data).id;
             createPeerConnection(sender_id);
-            sendOffer(sender_id);
           });
       
           const sendData = (data) => {
             socket.emit('data', data);
           };
      
-          const createPeerConnection = (sender_id) => {
+          const createPeerConnection = (sender_id) =>  {
             try {
               const pc = new RTCPeerConnection(PC_CONFIG);
               peerConnections[sender_id] = pc;
+
+              // pc.onconnectionstatechange = (event) => {
+              //   console.log(event);
+              //   console.log(pc.connectionState);
+              //   switch(pc.connectionState) {
+              //     case "connected":
+              //       console.log("PEER CONNECTED");
+              //       break;
+              //     case "disconnected":
+              //       console.log("PEER DISCONNECTED");
+              //       break;
+              //     case "failed":
+              //       console.log("PEER FAILED");
+              //       break;
+              //     case "closed":
+              //       console.log("PEER CLOSED");
+              //       break;
+              //   }
+              // } // DO I NEED THIS?? PROBABLY IN ORDER OF HANDLING ERRORS
+
               pc.onicecandidate = (event) => {
                 if (event.candidate) {
                   console.log('ICE candidate');
@@ -54,7 +71,6 @@ const VideoArea = (props) => {
                     tempPeerStreams.map( (streamItem, index) => {
                       if (streamItem.id === sender_id) {
                         tempPeerStreams.splice(index, 1);
-                        console.log("SPLICED!!!!! ", tempPeerStreams);
                       };
                       return 0;
                     });
@@ -78,7 +94,6 @@ const VideoArea = (props) => {
                 tracks.forEach( (track) => {
                   senderTracks[sender_id] = peerConnections[sender_id].addTrack(track, stream.current);
                 });
-                console.log("Added local stream");
                 setIsStreamSet(true);
               }
               console.log('PeerConnection created');
@@ -88,7 +103,7 @@ const VideoArea = (props) => {
           };
       
           const sendOffer = (sender_id) => {
-            peerConnections[sender_id].createOffer().then( (offer) => {
+            peerConnections[sender_id].createOffer().then( offer => {
               peerConnections[sender_id].setLocalDescription(offer);
               const dataToSend = {
                 type: offer.type,
@@ -114,21 +129,30 @@ const VideoArea = (props) => {
           };
           
           const handleSignalingData = (data) => {
-            switch (data.type) {
-              case 'offer':
-                if (!peerConnections[data.sender_sid]) {
-                  createPeerConnection(data.sender_sid);
+            (async () => {
+              try {
+                switch (data.type) {
+                  case 'offer':
+                    if (!peerConnections[data.sender_sid]) {
+                      createPeerConnection(data.sender_sid);
+                    }
+                    await peerConnections[data.sender_sid].setRemoteDescription(new RTCSessionDescription(data.description)).then( () => {
+                      sendAnswer(data.sender_sid);
+                    });
+                    break;
+                  case 'answer':
+                    await peerConnections[data.sender_sid].setRemoteDescription(new RTCSessionDescription(data.description));
+                    break;
+                  case 'candidate':
+                    if (data.candidate) {
+                      await peerConnections[data.sender_sid].addIceCandidate(new RTCIceCandidate(data.candidate));
+                    }
+                    break;
                 }
-                peerConnections[data.sender_sid].setRemoteDescription(new RTCSessionDescription(data.description));
-                sendAnswer(data.sender_sid);
-                break;
-              case 'answer':
-                peerConnections[data.sender_sid].setRemoteDescription(new RTCSessionDescription(data.description));
-                break;
-              case 'candidate':
-                peerConnections[data.sender_sid].addIceCandidate(new RTCIceCandidate(data.candidate));
-                break;
-            }
+              } catch (error) {
+                console.error(error);
+              }
+            })();
           };
     }, []);
 
@@ -157,7 +181,7 @@ const VideoArea = (props) => {
                     track.stop();
                     Object.keys(peerConnections).map(function(key, index) {
                       console.log("REMOVED TRACK");
-                        peerConnections[key].removeTrack(senderTracks[key]);
+                      peerConnections[key].removeTrack(senderTracks[key]);
                     });
                     setIsStreamSet(false);
                 });
