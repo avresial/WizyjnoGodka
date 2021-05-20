@@ -1,6 +1,6 @@
 from aiohttp import web
 import socketio
-from User import user_list
+from User.user_list import UserList
 from Invitation.invitation import Invitation, EncodeInvitation
 from Invitation.invitation_list import InvitationList
 import json
@@ -9,7 +9,7 @@ from loguru import logger
 import sys
 
 BaseAllRoom = 'All'
-users_list = user_list.UserList()
+users_list = UserList()
 invitations_list = InvitationList()
 rooms_list = [BaseAllRoom]
 sio = socketio.AsyncServer(cors_allowed_origins='*')
