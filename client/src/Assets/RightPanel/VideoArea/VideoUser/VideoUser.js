@@ -1,5 +1,5 @@
 import React from 'react'
-import classes from './Video.module.css'
+import classes from './../Video.module.css'
 
 const Video = (props) => {
     return(

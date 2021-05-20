@@ -42,7 +42,7 @@ const RightPanel = (props) => {
         <div className = {style}>
             <div className='row'>
                 <div className='col'>
-                    <VideoArea videoOn = {props.videoOn} />
+                    <VideoArea connections={props.connections} videoOn = {props.videoOn} />
                 </div>
             </div>
             <div className='row' style={styleButtonRow}>

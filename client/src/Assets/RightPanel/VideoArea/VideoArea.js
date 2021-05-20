@@ -1,37 +1,53 @@
 import React, {useState, useRef, useEffect} from 'react'
-import Video from './Video'
+import Video from './VideoUser/VideoUser'
+import VideoGuest from './VideoGuest/VideoGuest'
 import classes from './VideoArea.module.css'
 import {socket, PC_CONFIG} from '../../Context/socket'
+
+const peerConnections = {};
+const senderTracks = {};
 
 const VideoArea = (props) => {
     const userVideo = useRef();
     const stream = useRef();
-    const guestVideo = useRef();
+    const [peerStreams, setPeerStreams] = useState([]);
+    const [isStreamSet, setIsStreamSet] = useState(false);
 
     useEffect( () => {
-        const peerConnections = {};
-
         socket.on('data', (data) => {
-            console.log("Data received");
             handleSignalingData(data);
           });
 
+          socket.on('users-connected', data => {
+            const arr = JSON.parse(data);
+            arr.forEach( (element, index, array) => {
+              createPeerConnection(element.sid);
+            });
+          });
+
           socket.on('ready', (data) => {
-            const sender_id = JSON.parse(data).id
-            console.log(sender_id);
+            const sender_id = JSON.parse(data).id;
             createPeerConnection(sender_id);
-            sendOffer(sender_id);
           });
       
           const sendData = (data) => {
             socket.emit('data', data);
           };
      
-          const createPeerConnection = (sender_id) => {
+          const createPeerConnection = (sender_id) =>  {
             try {
-              const pc = new RTCPeerConnection(PC_CONFIG);
-              peerConnections[sender_id] = pc;
-              pc.onicecandidate = (event) => {
+              if (!peerConnections[sender_id]) {
+                const pc = new RTCPeerConnection(PC_CONFIG);
+                peerConnections[sender_id] = pc;
+              }
+
+              peerConnections[sender_id].addEventListener("iceconnectionstatechange", event => {
+                if (peerConnections[sender_id].iceConnectionState === "failed") {
+                  peerConnections[sender_id].restartIce();
+                }
+              });
+
+              peerConnections[sender_id].onicecandidate = (event) => {
                 if (event.candidate) {
                   console.log('ICE candidate');
                   const dataToSend = {
@@ -43,13 +59,38 @@ const VideoArea = (props) => {
                   sendData(dataToSend);
                 }
               };
-              pc.onaddstream = (event) => {
-                console.log('Add stream');
-                guestVideo.current.srcObject = event.stream;
+
+              peerConnections[sender_id].ontrack = ({track, streams: [stream]}) => {
+                stream.onremovetrack = (event) => {
+                  setPeerStreams( peerStreams => {
+                    const tempPeerStreams = [...peerStreams];
+                    tempPeerStreams.map( (streamItem, index) => {
+                      if (streamItem.id === sender_id) {
+                        tempPeerStreams.splice(index, 1);
+                      };
+                      return 0;
+                    });
+                    return tempPeerStreams;
+                  });
+                };
+                
+                setPeerStreams( peerStreams => {
+                  const tempPeerStreams = [...peerStreams];
+                  tempPeerStreams.push({id: sender_id, data: stream});
+                  return tempPeerStreams;
+                });
+              }; 
+
+              peerConnections[sender_id].onnegotiationneeded = () => {
+                sendOffer(sender_id);
               };
+
               if (stream.current) {
-                pc.addStream(stream.current);
-                console.log("Added local stream");
+                const tracks = stream.current.getTracks();
+                tracks.forEach( (track) => {
+                  senderTracks[sender_id] = peerConnections[sender_id].addTrack(track, stream.current);
+                });
+                setIsStreamSet(true);
               }
               console.log('PeerConnection created');
             } catch (error) {
@@ -57,50 +98,54 @@ const VideoArea = (props) => {
             }
           };
       
-          const sendOffer = (sender_id) => {
-            console.log('Send offer');
-            peerConnections[sender_id].createOffer().then( (offer) => {
-              peerConnections[sender_id].setLocalDescription(offer);
-              console.log('Local description set');
-              const dataToSend = {
-                type: offer.type,
-                receiver_sid: sender_id,
-                sender_sid: socket.id,
-                description: offer
-              }
-              sendData(dataToSend);
-            });
+          const sendOffer = async (sender_id) => {
+            const offer = await peerConnections[sender_id].createOffer();
+            await peerConnections[sender_id].setLocalDescription(offer);
+            const dataToSend = {
+              type: offer.type,
+              receiver_sid: sender_id,
+              sender_sid: socket.id,
+              description: offer
+            }
+            sendData(dataToSend);
           };
           
-          const sendAnswer = (sender_id) => {
-            console.log('Send answer');
-            peerConnections[sender_id].createAnswer().then((answer) => {
-              peerConnections[sender_id].setLocalDescription(answer);
-              console.log('Local description set');
-              const dataToSend = {
-                type: answer.type,
-                receiver_sid: sender_id,
-                sender_sid: socket.id,
-                description: answer
-              }
-              sendData(dataToSend);
-            });
+          const sendAnswer = async (sender_id) => {
+            const answer = await peerConnections[sender_id].createAnswer();
+            await peerConnections[sender_id].setLocalDescription(answer);
+            const dataToSend = {
+              type: answer.type,
+              receiver_sid: sender_id,
+              sender_sid: socket.id,
+              description: answer
+            }
+            sendData(dataToSend);
           };
-          
-          const handleSignalingData = (data) => {
-            switch (data.type) {
-              case 'offer':
-                createPeerConnection(data.sender_sid);
-                peerConnections[data.sender_sid].setRemoteDescription(new RTCSessionDescription(data.description));
-                sendAnswer(data.sender_sid);
-                break;
-              case 'answer':
-                peerConnections[data.sender_sid].setRemoteDescription(new RTCSessionDescription(data.description));
-                break;
-              case 'candidate':
-                console.log("Candidate IN HANDLE");
-                peerConnections[data.sender_sid].addIceCandidate(new RTCIceCandidate(data.candidate));
-                break;
+
+          const handleSignalingData = async (data) => {
+            try {
+              switch (data.type) {
+                case 'offer':
+                  if (!peerConnections[data.sender_sid]) {
+                    createPeerConnection(data.sender_sid);
+                  }
+                  await peerConnections[data.sender_sid].setRemoteDescription(new RTCSessionDescription(data.description));
+                  sendAnswer(data.sender_sid);
+                  console.log("REMOTE OFFER");
+                  break;
+                case 'answer':
+                  await peerConnections[data.sender_sid].setRemoteDescription(new RTCSessionDescription(data.description));
+                  console.log("REMOTE ANSWER");
+                  break;
+                case 'candidate':
+                  if (data.candidate) {
+                    await peerConnections[data.sender_sid].addIceCandidate(new RTCIceCandidate(data.candidate));
+                    console.log("REMOTE ICE-CANDIDATE");
+                  }
+                  break;
+              }
+            } catch (error) {
+              console.error(error);
             }
           };
     }, []);
@@ -111,6 +156,16 @@ const VideoArea = (props) => {
                 stream.current = mediaStream;
                 if(userVideo.current) {
                     userVideo.current.srcObject = mediaStream;
+                    if (!isStreamSet) {
+                      const tracks = stream.current.getTracks();
+                      Object.keys(peerConnections).map(function(key, index) {
+                        tracks.forEach( (track) => {
+                          console.log(peerConnections[key].currentRemoteDescription);
+                          senderTracks[key] = peerConnections[key].addTrack(track, stream.current);
+                        });
+                      });
+                      setIsStreamSet(true);
+                    }
                 }
             });
         }
@@ -119,6 +174,11 @@ const VideoArea = (props) => {
                 const tracks = stream.current.getTracks();
                 tracks.forEach(function(track) {
                     track.stop();
+                    Object.keys(peerConnections).map(function(key, index) {
+                      console.log("REMOVED TRACK");
+                      peerConnections[key].removeTrack(senderTracks[key]);
+                    });
+                    setIsStreamSet(false);
                 });
             } catch (e) {
                 console.log(e);
@@ -128,15 +188,14 @@ const VideoArea = (props) => {
 
     return (
         <div className={`row ${classes.VideoArea}`}>
-            <Video videoOn = {props.videoOn} userVideo = {userVideo} ></Video>
-            <Video videoOn = {true} userVideo = {guestVideo} ></Video>
-            {/* {
-                listOfVideos.map((currentItem, index) => {
+            <Video videoOn = {true} userVideo = {userVideo} ></Video>
+            {
+                peerStreams.map( currentItem => {
                     return(
-                        <Video key = {index} videoOn = {props.videoOn} userVideo = {userVideo} ></Video>
+                        <VideoGuest key = {currentItem.id} videoOn = {true} pc={currentItem.data}></VideoGuest>
                     );
                 })
-            } */}
+            }
         </div>
     );
 };
