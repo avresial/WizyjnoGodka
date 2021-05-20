@@ -1,14 +1,16 @@
 from aiohttp import web
 import socketio
 from User import user_list
-from Invitation import invitation as inv
+from Invitation.invitation import Invitation, EncodeInvitation
+from Invitation.invitation_list import InvitationList
 import json
 import time
 from loguru import logger
 import sys
+
 BaseAllRoom = 'All'
 users_list = user_list.UserList()
-invitations_list = []
+invitations_list = InvitationList()
 rooms_list = [BaseAllRoom]
 sio = socketio.AsyncServer(cors_allowed_origins='*')
 app = web.Application()
@@ -25,7 +27,6 @@ logger.add(sys.stdout,
            enqueue=True,
            catch=True
            )
-
 
 @sio.event
 async def connect(sid, environ):
@@ -83,8 +84,8 @@ async def pass_new_clients_name(sid, name):
 @logger.catch
 async def send_invitation(sender_sid, receiver_sid):
     logger.info(f"New pending invitation - sender sid: {sender_sid} & receiver sid: {receiver_sid}")
-    invitations_list.append(inv.Invitation(sender_sid,receiver_sid))
-    str = json.dumps(inv.Invitation(sender_sid, receiver_sid), indent=2, cls=inv.EncodeInvitation)
+    invitations_list.append(sender_sid, receiver_sid)
+    str = json.dumps(Invitation(sender_sid, receiver_sid), indent=2, cls=EncodeInvitation)
     await sio.emit('receive-invite', data=str, to=receiver_sid)
 
 # Sender is client who sends "send-invitation" event, receiver is a client to be invited
@@ -94,7 +95,7 @@ async def accept_invitation(sid,data):
     receiver_sid = new_data["receiver_sid"]
     sender_sid = new_data["sender_sid"]
     
-    if is_this_invitation_on_list(sender_sid,receiver_sid):
+    if invitations_list.invitation_exist(sender_sid,receiver_sid):
         logger.info(f"{receiver_sid} accepted invitation from {sender_sid}")
         if len(sio.rooms(sender_sid)) > 1:
             add_receiver_to_already_existed_room(sender_sid,receiver_sid)
@@ -103,11 +104,6 @@ async def accept_invitation(sid,data):
     else:
         logger.error(f"{sender_sid}->{receiver_sid} invitation not found")
 
-def is_this_invitation_on_list(sender_sid,receiver_sid) -> bool:
-    for invitation in invitations_list:
-        if invitation.sender_sid == sender_sid and invitation.receiver_sid == receiver_sid:
-            return True
-    return False 
 
 def add_receiver_to_already_existed_room(sender_sid,receiver_sid) -> None:
     logger.debug(f"adding {receiver_sid} to already existed room")
@@ -136,8 +132,8 @@ async def decline_invitation(sid, data):
     new_data = json.loads(data)
     for invitation in invitations_list:
         if invitation.sender_sid == new_data["sender_sid"] and invitation.receiver_sid == new_data["receiver_sid"]:
-            logger.debug(f"removed invitation {invitation.sender_sid}->{invitation.receiver_sid}")
             invitations_list.remove(invitation)
+            logger.debug(f"removed invitation {invitation.sender_sid}->{invitation.receiver_sid}")
             for invitation in invitations_list:
                 logger.debug(f"{invitation.sender_sid}->{invitation.receiver_sid}")
 
