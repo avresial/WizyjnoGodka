@@ -18,6 +18,13 @@ const VideoArea = (props) => {
             handleSignalingData(data);
           });
 
+          socket.on('users-connected', data => {
+            const arr = JSON.parse(data);
+            arr.forEach( (element, index, array) => {
+              createPeerConnection(element.sid);
+            });
+          });
+
           socket.on('ready', (data) => {
             const sender_id = JSON.parse(data).id;
             createPeerConnection(sender_id);
@@ -29,29 +36,18 @@ const VideoArea = (props) => {
      
           const createPeerConnection = (sender_id) =>  {
             try {
-              const pc = new RTCPeerConnection(PC_CONFIG);
-              peerConnections[sender_id] = pc;
+              if (!peerConnections[sender_id]) {
+                const pc = new RTCPeerConnection(PC_CONFIG);
+                peerConnections[sender_id] = pc;
+              }
 
-              // pc.onconnectionstatechange = (event) => {
-              //   console.log(event);
-              //   console.log(pc.connectionState);
-              //   switch(pc.connectionState) {
-              //     case "connected":
-              //       console.log("PEER CONNECTED");
-              //       break;
-              //     case "disconnected":
-              //       console.log("PEER DISCONNECTED");
-              //       break;
-              //     case "failed":
-              //       console.log("PEER FAILED");
-              //       break;
-              //     case "closed":
-              //       console.log("PEER CLOSED");
-              //       break;
-              //   }
-              // } // DO I NEED THIS?? PROBABLY IN ORDER OF HANDLING ERRORS
+              peerConnections[sender_id].addEventListener("iceconnectionstatechange", event => {
+                if (peerConnections[sender_id].iceConnectionState === "failed") {
+                  peerConnections[sender_id].restartIce();
+                }
+              });
 
-              pc.onicecandidate = (event) => {
+              peerConnections[sender_id].onicecandidate = (event) => {
                 if (event.candidate) {
                   console.log('ICE candidate');
                   const dataToSend = {
@@ -102,57 +98,55 @@ const VideoArea = (props) => {
             }
           };
       
-          const sendOffer = (sender_id) => {
-            peerConnections[sender_id].createOffer().then( offer => {
-              peerConnections[sender_id].setLocalDescription(offer);
-              const dataToSend = {
-                type: offer.type,
-                receiver_sid: sender_id,
-                sender_sid: socket.id,
-                description: offer
-              }
-              sendData(dataToSend);
-            });
+          const sendOffer = async (sender_id) => {
+            const offer = await peerConnections[sender_id].createOffer();
+            await peerConnections[sender_id].setLocalDescription(offer);
+            const dataToSend = {
+              type: offer.type,
+              receiver_sid: sender_id,
+              sender_sid: socket.id,
+              description: offer
+            }
+            sendData(dataToSend);
           };
           
-          const sendAnswer = (sender_id) => {
-            peerConnections[sender_id].createAnswer().then((answer) => {
-              peerConnections[sender_id].setLocalDescription(answer);
-              const dataToSend = {
-                type: answer.type,
-                receiver_sid: sender_id,
-                sender_sid: socket.id,
-                description: answer
-              }
-              sendData(dataToSend);
-            });
+          const sendAnswer = async (sender_id) => {
+            const answer = await peerConnections[sender_id].createAnswer();
+            await peerConnections[sender_id].setLocalDescription(answer);
+            const dataToSend = {
+              type: answer.type,
+              receiver_sid: sender_id,
+              sender_sid: socket.id,
+              description: answer
+            }
+            sendData(dataToSend);
           };
-          
-          const handleSignalingData = (data) => {
-            (async () => {
-              try {
-                switch (data.type) {
-                  case 'offer':
-                    if (!peerConnections[data.sender_sid]) {
-                      createPeerConnection(data.sender_sid);
-                    }
-                    await peerConnections[data.sender_sid].setRemoteDescription(new RTCSessionDescription(data.description)).then( () => {
-                      sendAnswer(data.sender_sid);
-                    });
-                    break;
-                  case 'answer':
-                    await peerConnections[data.sender_sid].setRemoteDescription(new RTCSessionDescription(data.description));
-                    break;
-                  case 'candidate':
-                    if (data.candidate) {
-                      await peerConnections[data.sender_sid].addIceCandidate(new RTCIceCandidate(data.candidate));
-                    }
-                    break;
-                }
-              } catch (error) {
-                console.error(error);
+
+          const handleSignalingData = async (data) => {
+            try {
+              switch (data.type) {
+                case 'offer':
+                  if (!peerConnections[data.sender_sid]) {
+                    createPeerConnection(data.sender_sid);
+                  }
+                  await peerConnections[data.sender_sid].setRemoteDescription(new RTCSessionDescription(data.description));
+                  sendAnswer(data.sender_sid);
+                  console.log("REMOTE OFFER");
+                  break;
+                case 'answer':
+                  await peerConnections[data.sender_sid].setRemoteDescription(new RTCSessionDescription(data.description));
+                  console.log("REMOTE ANSWER");
+                  break;
+                case 'candidate':
+                  if (data.candidate) {
+                    await peerConnections[data.sender_sid].addIceCandidate(new RTCIceCandidate(data.candidate));
+                    console.log("REMOTE ICE-CANDIDATE");
+                  }
+                  break;
               }
-            })();
+            } catch (error) {
+              console.error(error);
+            }
           };
     }, []);
 
@@ -166,6 +160,7 @@ const VideoArea = (props) => {
                       const tracks = stream.current.getTracks();
                       Object.keys(peerConnections).map(function(key, index) {
                         tracks.forEach( (track) => {
+                          console.log(peerConnections[key].currentRemoteDescription);
                           senderTracks[key] = peerConnections[key].addTrack(track, stream.current);
                         });
                       });
