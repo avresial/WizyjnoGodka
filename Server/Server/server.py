@@ -107,6 +107,8 @@ async def accept_invitation(sid, data):
             create_new_room_and_add_participants(sender_sid,receiver_sid)
         logger.info(f"{receiver_sid} accepted invitation from {sender_sid}")
         invitations_list.remove(sender_sid, receiver_sid)
+        str = json.dumps(Invitation(sender_sid, receiver_sid), indent=2, cls=EncodeInvitation)
+        await sio.emit('invite-accepted', data=str, to=sender_sid)
     else:
         logger.error(f"{sender_sid}->{receiver_sid} invitation not found")
 
