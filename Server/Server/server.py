@@ -147,7 +147,10 @@ async def decline_invitation(sid, data):
         invitations_list.remove(sender_sid, receiver_sid)
         logger.debug(f"invitation {sender_sid}->{receiver_sid} declined")
         str = json.dumps(Invitation(sender_sid, receiver_sid), indent=2, cls=EncodeInvitation)
-        await sio.emit('invite-declined', data=str, to=sender_sid)
+        if sid == sender_sid:
+            await sio.emit('invite-declined', data=str, to=receiver_sid)
+        else:
+            await sio.emit('invite-declined', data=str, to=sender_sid)
         for invitation in invitations_list.invitations_list:
             logger.debug(f"{invitation.sender_sid}->{invitation.receiver_sid}")
 
