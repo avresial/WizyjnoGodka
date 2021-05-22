@@ -1,5 +1,6 @@
 from Invitation.invitation import Invitation
 
+
 class InvitationList:
     def __init__(self):
         self.list_of_invitations = []
@@ -19,3 +20,11 @@ class InvitationList:
             if invitation.sender_sid == sender_sid and invitation.receiver_sid == receiver_sid:
                 return True
         return False
+
+    def count_same_invitations(self,sender_sid: str,receiver_sid: str) -> int:
+        #prevents DDOS memory overflow hehehehe
+        counter = 0
+        for invitation in self.list_of_invitations:
+            if invitation.sender_sid == sender_sid and invitation.receiver_sid == receiver_sid:
+                counter += 1
+        return counter
