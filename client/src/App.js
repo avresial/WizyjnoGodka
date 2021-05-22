@@ -5,6 +5,7 @@ import Container from 'react-bootstrap/Container'
 import StarterPanel from './Assets/StarterPanel/StarterPanel'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import LoggerBox from './Assets/LoggerBox/LoggerBox'
+import CallBox from './Assets/CallBox/CallBox'
 import {socket} from './Assets/Context/socket'
 
 
@@ -18,13 +19,15 @@ const getTimeOfMessage = () => {
 };
 
 const App = () => {
-  console.log("App rerendered");
+  const invitationData = useRef(null);
   const [yourUserName, setName] = useState('default');
   const [isNameSet, setIsNameSet] = useState(false);
   const [videoOn, setVideoOn] = useState(false);
   const [messageList, setMessageList] = useState([]);
   const [listOfConnections, setListOfConnections] = useState([]);
   const [logList, setLogList] = useState([]);
+  const [isCallingTo, setIsCallingTo] = useState(false);
+  const [isCallingFrom, setIsCallingFrom] = useState(false);
   const logTimeout = useRef();
  
   useEffect(() => {
@@ -62,6 +65,25 @@ const App = () => {
         return tempList;
       });
     });
+
+    socket.on('receive-invite', (data) => {
+
+      invitationData.current = data;
+      if (!isCallingTo && !isCallingFrom) {
+        setIsCallingFrom(true);
+      } else {
+        appendNewLog('There is another call already!');
+        // TO DO, if invitation data is not empty, send info about already in call or busy
+      }
+
+    });
+
+    socket.on('invite-declined', (data) => {
+        setIsCallingTo(false);
+        setIsCallingFrom(false);
+        appendNewLog('invitation was declined!');
+    });
+
   }, []);
 
   const onButtonClickHandler = () => {
@@ -88,10 +110,43 @@ const App = () => {
     setMessageList(messageList => ([...messageList, ...temporaryList]));
   };
 
+
   const SendConnectionRequest = (index) => {
-    const data = listOfConnections[index].sid;
-    socket.emit('send-invitation', data);
+    if (!isCallingTo && !isCallingFrom) {
+      setIsCallingTo(true);
+      const data = listOfConnections[index].sid;
+      const jsonObject = {
+        'receiver_sid': data,
+        'sender_sid': socket.id
+      };
+      invitationData.current = JSON.stringify(jsonObject);
+      socket.emit('send-invitation', data);
+    } else {
+      appendNewLog('You are already calling');
+    }
   };
+
+
+  const SetFalseIsCalling = () => {
+    if (isCallingTo) {
+      setIsCallingTo(false);
+    } else if (isCallingFrom) {
+      setIsCallingFrom(false);
+    }
+  }
+
+  const SendAcceptation = () => {
+    const dataToSend = invitationData.current;
+    socket.emit('accept-invitation', dataToSend);
+    SetFalseIsCalling();
+  }
+
+  const SendDeclination = () => {
+    const dataToSend = invitationData.current;
+    socket.emit('decline-invitation', dataToSend);
+    SetFalseIsCalling();
+  }
+
 
   const setUserName = (userName) => {
     if (!userName) {
@@ -139,6 +194,13 @@ const App = () => {
 
   return(
     <Container fluid>
+      {
+        isCallingTo || isCallingFrom
+        ? <CallBox isCallingTo={isCallingTo} isCallingFrom={isCallingFrom} 
+                  SendAcceptation={SendAcceptation} SendDeclination={SendDeclination} 
+                  textToShow={'some text here'} />
+        : null
+      }
       {
         logList.length > 0
           ? <LoggerBox itemsCount={logList.length}>{logList[0]}</LoggerBox>
