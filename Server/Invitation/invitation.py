@@ -1,5 +1,6 @@
 import json
 
+
 class Invitation:
     # Sender is client who sends "send-invitation" event, receiver is a client to be invated
     def __init__(self,sender_sid, receiver_sid):
