@@ -5,10 +5,11 @@ from Invitation.invitation import Invitation, EncodeInvitation
 from Invitation.invitation_list import InvitationList
 from loguru import logger
 
-BaseAllRoom = 'All'
+#BaseAllRoom = 'All'
 users_list = UserList()
 invitations_list = InvitationList()
-rooms_list = [BaseAllRoom]
+#rooms_list = [BaseAllRoom]
+rooms_list = []
 sio = socketio.AsyncServer(cors_allowed_origins='*')
 app = web.Application()
 sio.attach(app)
@@ -27,7 +28,7 @@ logger.add(sys.stdout,
 
 @sio.event
 async def connect(sid, environ):
-    sio.enter_room(sid, BaseAllRoom)
+    #sio.enter_room(sid, BaseAllRoom)
     logger.success(f"Connected {sid}")
     logger.debug(f"rooms list: {rooms_list}")
     users_list.append_new_user(sid)
@@ -107,6 +108,8 @@ async def accept_invitation(sid, data):
             create_new_room_and_add_participants(sender_sid,receiver_sid)
         logger.info(f"{receiver_sid} accepted invitation from {sender_sid}")
         invitations_list.remove(sender_sid, receiver_sid)
+        str = json.dumps(Invitation(sender_sid, receiver_sid), indent=2, cls=EncodeInvitation)
+        await sio.emit('invite-accepted', data=str, to=sender_sid)
     else:
         logger.error(f"{sender_sid}->{receiver_sid} invitation not found")
 
@@ -144,8 +147,11 @@ async def decline_invitation(sid, data):
         invitations_list.remove(sender_sid, receiver_sid)
         logger.debug(f"invitation {sender_sid}->{receiver_sid} declined")
         str = json.dumps(Invitation(sender_sid, receiver_sid), indent=2, cls=EncodeInvitation)
-        await sio.emit('invite-declined', data=str, to=sender_sid)
-        for invitation in invitations_list:
+        if sid == sender_sid:
+            await sio.emit('invite-declined', data=str, to=receiver_sid)
+        else:
+            await sio.emit('invite-declined', data=str, to=sender_sid)
+        for invitation in invitations_list.invitations_list:
             logger.debug(f"{invitation.sender_sid}->{invitation.receiver_sid}")
 
 
