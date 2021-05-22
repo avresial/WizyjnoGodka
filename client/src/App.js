@@ -84,6 +84,11 @@ const App = () => {
         appendNewLog('invitation was declined!');
     });
 
+    socket.on('invite-accepted', (data) => {
+      //TO DO Actions for adding clients to room
+      setIsCallingTo(false);
+    });
+
   }, []);
 
   const onButtonClickHandler = () => {
@@ -136,6 +141,7 @@ const App = () => {
   }
 
   const SendAcceptation = () => {
+    //TO DO Actions for adding clients to room
     const dataToSend = invitationData.current;
     socket.emit('accept-invitation', dataToSend);
     SetFalseIsCalling();
