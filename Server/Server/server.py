@@ -5,11 +5,33 @@ from Invitation.invitation import Invitation, EncodeInvitation
 from Invitation.invitation_list import InvitationList
 from loguru import logger
 
+
+class Room:
+    def __init__(self, room):
+        self.sid_list = []
+        self.room = room
+
+    def append_to_list(self, sid):
+        self.sid_list.append(sid)
+
+    def remove_from_list(self, sid):
+        self.sid_list.remove(sid)
+
+    def get_all_sid_from_room(self) -> str:
+        json_list = json.dumps(self.sid_list)
+        return json_list
+
+    def if_sid_is_in_room(self, sid):
+        if self.sid_list.__contains__(sid):
+            return True
+        else:
+            return False
+
+
 #BaseAllRoom = 'All'
 users_list = UserList()
 invitations_list = InvitationList()
-#rooms_list = [BaseAllRoom]
-rooms_list = []
+rooms_list = {}
 sio = socketio.AsyncServer(cors_allowed_origins='*')
 app = web.Application()
 sio.attach(app)
@@ -26,9 +48,9 @@ logger.add(sys.stdout,
            catch=True
            )
 
+
 @sio.event
 async def connect(sid, environ):
-    #sio.enter_room(sid, BaseAllRoom)
     logger.success(f"Connected {sid}")
     logger.debug(f"rooms list: {rooms_list}")
     users_list.append_new_user(sid)
@@ -52,19 +74,21 @@ async def get_users(sid):
 @sio.on('data')
 async def data(sid, data): # data is going to be Video and audio
     logger.info(f"Message from {sid}: {data}")
-    if sio.rooms(sid)[0] != sid:
-        await sio.emit('data', data, room=sio.rooms(sid)[0], skip_sid=sid)
-    else:
-        await sio.emit('data', data, room=sio.rooms(sid)[1], skip_sid=sid)
+    to_sid = data['receiver_sid']
+    await sio.emit('data', data, skip_sid=sid, to=to_sid)
 
 
 @sio.on('chat')
 async def pass_chat_data(sid, message):
     logger.info(f"chat message sent: {message}")
-    if sio.rooms(sid)[0] != sid:
-        await sio.emit('message', message, room=sio.rooms(sid)[0], skip_sid=sid)
-    else:
-        await sio.emit('message', message, room=sio.rooms(sid)[1], skip_sid=sid)
+    try:
+        if sio.rooms(sid)[0] != sid:
+            await sio.emit('message', message, room=sio.rooms(sid)[0], skip_sid=sid)
+        else:
+            await sio.emit('message', message, room=sio.rooms(sid)[1], skip_sid=sid)
+    except IndexError as e:
+        logger.warning(f'index error in chat data: {e}')
+
 
 @sio.on('name')
 async def pass_new_clients_name(sid, name):
@@ -89,7 +113,8 @@ async def send_invitation(sender_sid, receiver_sid):
     await sio.emit('receive-invite', data=str, to=receiver_sid)
     await sio.sleep(10)
     if invitations_list.invitation_exist(sender_sid, receiver_sid):
-        await sio.emit('invite-expired', data=str, to=receiver_sid)
+        await sio.emit('invite-expired-receiver', data=str, to=receiver_sid)
+        await sio.emit('invite-expired-sender', data=str, to=sender_sid)
         invitations_list.remove(sender_sid, receiver_sid)
         logger.debug(f"invitation {sender_sid}->{receiver_sid} expired")
 
@@ -103,38 +128,53 @@ async def accept_invitation(sid, data):
     
     if invitations_list.invitation_exist(sender_sid,receiver_sid):
         if len(sio.rooms(sender_sid)) > 1:
-            add_receiver_to_already_existed_room(sender_sid,receiver_sid)
+            room = add_receiver_to_already_existed_room(sender_sid, receiver_sid)
         else:
-            create_new_room_and_add_participants(sender_sid,receiver_sid)
+            room = create_new_room_and_add_participants(sender_sid,receiver_sid)
         logger.info(f"{receiver_sid} accepted invitation from {sender_sid}")
         invitations_list.remove(sender_sid, receiver_sid)
         str = json.dumps(Invitation(sender_sid, receiver_sid), indent=2, cls=EncodeInvitation)
         await sio.emit('invite-accepted', data=str, to=sender_sid)
+
+        json_list = rooms_list[room].get_all_sid_from_room()
+        await sio.emit('create-peer', data=json_list, room=room)
+
     else:
         logger.error(f"{sender_sid}->{receiver_sid} invitation not found")
 
 
-def add_receiver_to_already_existed_room(sender_sid, receiver_sid) -> None:
+def add_receiver_to_already_existed_room(sender_sid, receiver_sid) -> str:
     logger.debug(f"adding {receiver_sid} to already existed room")
     remove_from_all_rooms(receiver_sid)
+
     if sio.rooms(sender_sid)[0] != sender_sid:
-        sio.enter_room(receiver_sid, sio.rooms(sender_sid)[0])
+        current_room = sio.rooms(sender_sid)[0]
     else:
-        sio.enter_room(receiver_sid, sio.rooms(sender_sid)[1])
+        current_room = sio.rooms(sender_sid)[1]
+
+    sio.enter_room(receiver_sid, current_room)
+    rooms_list[current_room].append_to_list(receiver_sid)
+
     logger.debug(f"sio.rooms(sender_sid) {sio.rooms(sender_sid)}")
     logger.debug(f"sio.rooms(receiver_sid) {sio.rooms(receiver_sid)}")
+    return current_room
 
 
-def create_new_room_and_add_participants(sender_sid, receiver_sid) -> None:
+def create_new_room_and_add_participants(sender_sid, receiver_sid) -> str:
     logger.debug(f"adding {receiver_sid} to newly created room")
-    newRoom = str(sender_sid + str(time.strftime("%H:%M:%S", time.localtime())) + "room")
-    rooms_list.append(newRoom)
-    sio.enter_room(sender_sid, newRoom)
+    new_room_name = str(sender_sid + str(time.strftime("%H:%M:%S", time.localtime())) + "room")
+
+    room = Room(new_room_name)
+    room.append_to_list(sender_sid)
+    room.append_to_list(receiver_sid)
+    rooms_list[new_room_name] = room
+
+    sio.enter_room(sender_sid, new_room_name)
     remove_from_all_rooms(receiver_sid)
-    sio.enter_room(receiver_sid, newRoom)
+    sio.enter_room(receiver_sid, new_room_name)
     logger.debug(f"sio.rooms(sender_sid) {sio.rooms(sender_sid)}")
     logger.debug(f"sio.rooms(receiver_sid) {sio.rooms(receiver_sid)}")
-
+    return new_room_name
 
 # Sender is client who sends "send-invitation" event, receiver is a client to be invited
 @sio.on('decline-invitation')
@@ -151,7 +191,7 @@ async def decline_invitation(sid, data):
             await sio.emit('invite-declined', data=str, to=receiver_sid)
         else:
             await sio.emit('invite-declined', data=str, to=sender_sid)
-        for invitation in invitations_list.invitations_list:
+        for invitation in invitations_list.list_of_invitations:
             logger.debug(f"{invitation.sender_sid}->{invitation.receiver_sid}")
 
 

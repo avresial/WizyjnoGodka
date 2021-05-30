@@ -18,23 +18,20 @@ const VideoArea = (props) => {
             handleSignalingData(data);
           });
 
-          socket.on('users-connected', data => {
+          socket.on('create-peer', data => {
             const arr = JSON.parse(data);
             arr.forEach( (element, index, array) => {
-              createPeerConnection(element.sid);
+              if (socket.id != element) {
+                createPeerConnection(element);
+              }
             });
           });
-
-          socket.on('ready', (data) => {
-            const sender_id = JSON.parse(data).id;
-            createPeerConnection(sender_id);
-          });
-      
+     
           const sendData = (data) => {
             socket.emit('data', data);
           };
      
-          const createPeerConnection = (sender_id) =>  {
+          const createPeerConnection = (sender_id) => {
             try {
               if (!peerConnections[sender_id]) {
                 const pc = new RTCPeerConnection(PC_CONFIG);

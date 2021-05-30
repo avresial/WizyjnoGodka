@@ -67,15 +67,24 @@ const App = () => {
     });
 
     socket.on('receive-invite', (data) => {
-
       invitationData.current = data;
       if (!isCallingTo && !isCallingFrom) {
         setIsCallingFrom(true);
       } else {
         appendNewLog('There is another call already!');
-        // TO DO, if invitation data is not empty, send info about already in call or busy
       }
+    });
 
+    socket.on('invite-expired-receiver', (data) => {
+      setIsCallingTo(false);
+      setIsCallingFrom(false);
+      appendNewLog('invitation was expired!');
+    });
+
+    socket.on('invite-expired-sender', (data) => {
+      setIsCallingTo(false);
+      setIsCallingFrom(false);
+      appendNewLog('Receiver does not respond!');     
     });
 
     socket.on('invite-declined', (data) => {
@@ -86,6 +95,9 @@ const App = () => {
 
     socket.on('invite-accepted', (data) => {
       //TO DO Actions for adding clients to room
+
+      //
+
       setIsCallingTo(false);
     });
 
@@ -142,6 +154,8 @@ const App = () => {
 
   const SendAcceptation = () => {
     //TO DO Actions for adding clients to room
+
+
     const dataToSend = invitationData.current;
     socket.emit('accept-invitation', dataToSend);
     SetFalseIsCalling();
