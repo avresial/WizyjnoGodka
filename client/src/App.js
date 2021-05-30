@@ -5,6 +5,7 @@ import Container from 'react-bootstrap/Container'
 import StarterPanel from './Assets/StarterPanel/StarterPanel'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import LoggerBox from './Assets/LoggerBox/LoggerBox'
+import CallBox from './Assets/CallBox/CallBox'
 import {socket} from './Assets/Context/socket'
 
 
@@ -18,17 +19,20 @@ const getTimeOfMessage = () => {
 };
 
 const App = () => {
-  console.log("App rerendered");
+  const invitationData = useRef(null);
   const [yourUserName, setName] = useState('default');
   const [isNameSet, setIsNameSet] = useState(false);
   const [videoOn, setVideoOn] = useState(false);
   const [messageList, setMessageList] = useState([]);
   const [listOfConnections, setListOfConnections] = useState([]);
   const [logList, setLogList] = useState([]);
+  const [isCallingTo, setIsCallingTo] = useState(false);
+  const [isCallingFrom, setIsCallingFrom] = useState(false);
+  const [isInRoom, setIsInRoom] = useState(false);
   const logTimeout = useRef();
- 
+  const [callerName, setCallerName] = useState('');
+
   useEffect(() => {
-    console.log("USE EFFECT APP JS");
     socket.on('connect', () => {
     });
   
@@ -64,6 +68,43 @@ const App = () => {
     });
   }, []);
 
+  useEffect( () => {
+    socket.on('receive-invite', (data) => {
+      console.log(data);
+      invitationData.current = data;
+      let caller_sid = JSON.parse(data).sender_sid;
+      setCallerName(caller_sid);
+      if (!isCallingTo && !isCallingFrom) {
+        setIsCallingFrom(true);
+      } else {
+        appendNewLog('There is another call already!');
+      }
+    });
+
+    socket.on('invite-expired-receiver', (data) => {
+      setIsCallingTo(false);
+      setIsCallingFrom(false);
+      appendNewLog('invitation was expired!');
+    });
+
+    socket.on('invite-expired-sender', (data) => {
+      setIsCallingTo(false);
+      setIsCallingFrom(false);
+      appendNewLog('Receiver does not respond!');     
+    });
+
+    socket.on('invite-declined', (data) => {
+        setIsCallingTo(false);
+        setIsCallingFrom(false);
+        appendNewLog('invitation was declined!');
+    });
+
+    socket.on('invite-accepted', (data) => {
+      setIsCallingTo(false);
+      setIsInRoom(true);
+    });
+  }, [isCallingFrom, isCallingTo]);
+
   const onButtonClickHandler = () => {
     setVideoOn(!videoOn);
   };
@@ -89,9 +130,42 @@ const App = () => {
   };
 
   const SendConnectionRequest = (index) => {
-    const data = listOfConnections[index].sid;
-    socket.emit('send-invitation', data);
+    if (!isCallingTo && !isCallingFrom) {
+      setIsCallingTo(true);
+      const data = listOfConnections[index].sid;
+      setCallerName(data);
+      const jsonObject = {
+        'receiver_sid': data,
+        'sender_sid': socket.id
+      };
+      invitationData.current = JSON.stringify(jsonObject);
+      socket.emit('send-invitation', data);
+    } else {
+      appendNewLog('You are already calling');
+    }
   };
+
+  const SetFalseIsCalling = () => {
+    if (isCallingTo) {
+      setIsCallingTo(false);
+    } else if (isCallingFrom) {
+      setIsCallingFrom(false);
+    }
+  }
+
+  const SendAcceptation = () => {
+    setIsInRoom(true);
+    const dataToSend = invitationData.current;
+    socket.emit('accept-invitation', dataToSend);
+    SetFalseIsCalling();
+  }
+
+  const SendDeclination = () => {
+    const dataToSend = invitationData.current;
+    socket.emit('decline-invitation', dataToSend);
+    SetFalseIsCalling();
+  }
+
 
   const setUserName = (userName) => {
     if (!userName) {
@@ -140,6 +214,13 @@ const App = () => {
   return(
     <Container fluid>
       {
+        isCallingTo || isCallingFrom
+        ? <CallBox isCallingTo={isCallingTo} isCallingFrom={isCallingFrom} 
+                  SendAcceptation={SendAcceptation} SendDeclination={SendDeclination} 
+                  textToShow={callerName} />
+        : null
+      }
+      {
         logList.length > 0
           ? <LoggerBox itemsCount={logList.length}>{logList[0]}</LoggerBox>
           : null
@@ -148,7 +229,10 @@ const App = () => {
         isNameSet ?
         <div className = 'row vh-100'>
           <LeftPanel connections={listOfConnections} sendRequest={SendConnectionRequest} />
-          <RightPanel connections={listOfConnections} onVideoButtonClick={onButtonClickHandler} onSendButtonClick={(text) => onMessageSend(text)} videoOn={videoOn} messageList={messageList}/>
+          {
+            isInRoom ? <RightPanel isInRoom={isInRoom} connections={listOfConnections} onVideoButtonClick={onButtonClickHandler} onSendButtonClick={(text) => onMessageSend(text)} videoOn={videoOn} messageList={messageList}/>
+            : null
+          }
         </div>
         : <div className = 'row vh-100'>
           <StarterPanel OnClick={(userName) => setUserName(userName)}></StarterPanel>
