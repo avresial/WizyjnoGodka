@@ -1,0 +1,34 @@
+.CallBox{
+    padding:15px;
+    width:350px;
+    height:130px;
+    text-align:center;
+    background-color: #363636;
+    color:white;
+    border:1px solid #515151;
+    border-radius:4px;
+    box-shadow: -1px 5px 15px black;
+    
+    position:absolute;
+    display:block;
+    z-index: 999;
+    margin-left: auto;
+    margin-right: auto;
+    left: 0;
+    right: 0;
+    margin-top: auto;
+    margin-bottom: auto;
+    top: 0;
+    bottom: 0;
+}
+
+img {
+    max-width:25px;
+    max-height:25px;
+}
+
+.buttonStyle {
+    width:55px;
+    height:55px;
+    border-radius:100%;
+}
