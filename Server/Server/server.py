@@ -71,11 +71,25 @@ async def get_users(sid):
     await sio.emit('connections', data=str, to=sid)
 
 
-@sio.on('data')
-async def data(sid, data): # data is going to be Video and audio
-    logger.info(f"Message from {sid}: {data}")
-    to_sid = data['receiver_sid']
-    await sio.emit('data', data, skip_sid=sid, to=to_sid)
+@sio.on('candidate')
+async def candidate(sid, candidate_data):
+    logger.info(f"Message from {sid}: {candidate_data}")
+    to_sid = candidate_data['receiver_sid']
+    await sio.emit('candidate', candidate_data, skip_sid=sid, to=to_sid)
+
+
+@sio.on('offer')
+async def offer(sid, offer_data):
+    logger.info(f"Message from {sid}: {offer_data}")
+    to_sid = offer_data['receiver_sid']
+    await sio.emit('offer', offer_data, skip_sid=sid, to=to_sid)
+
+
+@sio.on('answer')
+async def answer(sid, answer_data):
+    logger.info(f"Message from {sid}: {answer_data}")
+    to_sid = answer_data['receiver_sid']
+    await sio.emit('answer', answer_data, skip_sid=sid, to=to_sid)
 
 
 @sio.on('chat')
@@ -175,6 +189,7 @@ def create_new_room_and_add_participants(sender_sid, receiver_sid) -> str:
     logger.debug(f"sio.rooms(sender_sid) {sio.rooms(sender_sid)}")
     logger.debug(f"sio.rooms(receiver_sid) {sio.rooms(receiver_sid)}")
     return new_room_name
+
 
 # Sender is client who sends "send-invitation" event, receiver is a client to be invited
 @sio.on('decline-invitation')

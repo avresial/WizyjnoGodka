@@ -28,10 +28,11 @@ const App = () => {
   const [logList, setLogList] = useState([]);
   const [isCallingTo, setIsCallingTo] = useState(false);
   const [isCallingFrom, setIsCallingFrom] = useState(false);
+  const [isInRoom, setIsInRoom] = useState(false);
   const logTimeout = useRef();
- 
+  const [callerName, setCallerName] = useState('');
+
   useEffect(() => {
-    console.log("USE EFFECT APP JS");
     socket.on('connect', () => {
     });
   
@@ -65,9 +66,14 @@ const App = () => {
         return tempList;
       });
     });
+  }, []);
 
+  useEffect( () => {
     socket.on('receive-invite', (data) => {
+      console.log(data);
       invitationData.current = data;
+      let caller_sid = JSON.parse(data).sender_sid;
+      setCallerName(caller_sid);
       if (!isCallingTo && !isCallingFrom) {
         setIsCallingFrom(true);
       } else {
@@ -94,14 +100,10 @@ const App = () => {
     });
 
     socket.on('invite-accepted', (data) => {
-      //TO DO Actions for adding clients to room
-
-      //
-
       setIsCallingTo(false);
+      setIsInRoom(true);
     });
-
-  }, []);
+  }, [isCallingFrom, isCallingTo]);
 
   const onButtonClickHandler = () => {
     setVideoOn(!videoOn);
@@ -127,11 +129,11 @@ const App = () => {
     setMessageList(messageList => ([...messageList, ...temporaryList]));
   };
 
-
   const SendConnectionRequest = (index) => {
     if (!isCallingTo && !isCallingFrom) {
       setIsCallingTo(true);
       const data = listOfConnections[index].sid;
+      setCallerName(data);
       const jsonObject = {
         'receiver_sid': data,
         'sender_sid': socket.id
@@ -143,7 +145,6 @@ const App = () => {
     }
   };
 
-
   const SetFalseIsCalling = () => {
     if (isCallingTo) {
       setIsCallingTo(false);
@@ -153,9 +154,7 @@ const App = () => {
   }
 
   const SendAcceptation = () => {
-    //TO DO Actions for adding clients to room
-
-
+    setIsInRoom(true);
     const dataToSend = invitationData.current;
     socket.emit('accept-invitation', dataToSend);
     SetFalseIsCalling();
@@ -218,7 +217,7 @@ const App = () => {
         isCallingTo || isCallingFrom
         ? <CallBox isCallingTo={isCallingTo} isCallingFrom={isCallingFrom} 
                   SendAcceptation={SendAcceptation} SendDeclination={SendDeclination} 
-                  textToShow={'some text here'} />
+                  textToShow={callerName} />
         : null
       }
       {
@@ -230,7 +229,10 @@ const App = () => {
         isNameSet ?
         <div className = 'row vh-100'>
           <LeftPanel connections={listOfConnections} sendRequest={SendConnectionRequest} />
-          <RightPanel connections={listOfConnections} onVideoButtonClick={onButtonClickHandler} onSendButtonClick={(text) => onMessageSend(text)} videoOn={videoOn} messageList={messageList}/>
+          {
+            isInRoom ? <RightPanel isInRoom={isInRoom} connections={listOfConnections} onVideoButtonClick={onButtonClickHandler} onSendButtonClick={(text) => onMessageSend(text)} videoOn={videoOn} messageList={messageList}/>
+            : null
+          }
         </div>
         : <div className = 'row vh-100'>
           <StarterPanel OnClick={(userName) => setUserName(userName)}></StarterPanel>

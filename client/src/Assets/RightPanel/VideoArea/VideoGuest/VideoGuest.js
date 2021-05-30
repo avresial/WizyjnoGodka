@@ -6,7 +6,7 @@ const VideoGuest = (props) => {
 
     useEffect( () => {
         video.current.srcObject = props.pc;
-    }, []);
+    }, [props.pc]);
 
     return(
         <div id='video-container' className = {`${classes.Video} col-xs-6 col-md-4`} >
