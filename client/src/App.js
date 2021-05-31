@@ -23,12 +23,13 @@ const App = () => {
   const [yourUserName, setName] = useState('default');
   const [isNameSet, setIsNameSet] = useState(false);
   const [videoOn, setVideoOn] = useState(false);
+  const [micOn, setMicOn] = useState(false);
   const [messageList, setMessageList] = useState([]);
   const [listOfConnections, setListOfConnections] = useState([]);
   const [logList, setLogList] = useState([]);
   const [isCallingTo, setIsCallingTo] = useState(false);
   const [isCallingFrom, setIsCallingFrom] = useState(false);
-  const [isInRoom, setIsInRoom] = useState(false);
+  const [isInRoom, setIsInRoom] = useState(true);
   const logTimeout = useRef();
   const [callerName, setCallerName] = useState('');
 
@@ -108,6 +109,10 @@ const App = () => {
   const onButtonClickHandler = () => {
     setVideoOn(!videoOn);
   };
+
+  const onMicClickHandler = () => {
+    setMicOn(!micOn);
+  }
 
   const onMessageSend = (text) => {
     if (!text) {
@@ -230,7 +235,13 @@ const App = () => {
         <div className = 'row vh-100'>
           <LeftPanel connections={listOfConnections} sendRequest={SendConnectionRequest} />
           {
-            isInRoom ? <RightPanel isInRoom={isInRoom} connections={listOfConnections} onVideoButtonClick={onButtonClickHandler} onSendButtonClick={(text) => onMessageSend(text)} videoOn={videoOn} messageList={messageList}/>
+            isInRoom ? <RightPanel isInRoom={isInRoom} connections={listOfConnections} 
+              onVideoButtonClick={onButtonClickHandler} 
+              onMicButtonClick={onMicClickHandler}
+              onSendButtonClick={(text) => onMessageSend(text)} 
+              videoOn={videoOn} 
+              micOn={micOn}
+              messageList={messageList}/>
             : null
           }
         </div>

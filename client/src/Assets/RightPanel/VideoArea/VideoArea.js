@@ -145,8 +145,8 @@ const VideoArea = (props) => {
     }, []);
 
     useEffect(() => {
-        if (props.videoOn) {
-            navigator.mediaDevices.getUserMedia({audio:false, video:true}).then((mediaStream) => {
+        if (props.videoOn && props.micOn) {
+            navigator.mediaDevices.getUserMedia({audio:true, video:true}).then((mediaStream) => {
                 stream.current = mediaStream;
                 if(userVideo.current) {
                     userVideo.current.srcObject = mediaStream;
@@ -163,6 +163,42 @@ const VideoArea = (props) => {
                 }
             });
         }
+        else if (props.videoOn && !props.micOn) {
+          navigator.mediaDevices.getUserMedia({audio:false, video:true}).then((mediaStream) => {
+            stream.current = mediaStream;
+            if(userVideo.current) {
+                userVideo.current.srcObject = mediaStream;
+                if (!isStreamSet) {
+                  const tracks = stream.current.getTracks();
+                  Object.keys(peerConnections).map(function(key, index) {
+                    tracks.forEach( (track) => {
+                      senderTracks[key] = peerConnections[key].addTrack(track, stream.current);
+                    });
+                    return 0;
+                  });
+                  isStreamSet = true;
+                }
+            }
+          });   
+        }
+        else if (!props.videoOn && props.micOn) {
+          navigator.mediaDevices.getUserMedia({audio:true, video:false}).then((mediaStream) => {
+            stream.current = mediaStream;
+            if(userVideo.current) {
+                userVideo.current.srcObject = mediaStream;
+                if (!isStreamSet) {
+                  const tracks = stream.current.getTracks();
+                  Object.keys(peerConnections).map(function(key, index) {
+                    tracks.forEach( (track) => {
+                      senderTracks[key] = peerConnections[key].addTrack(track, stream.current);
+                    });
+                    return 0;
+                  });
+                  isStreamSet = true;
+                }
+            }
+          });
+        }
         else {
             try{
                 const tracks = stream.current.getTracks();
@@ -178,7 +214,7 @@ const VideoArea = (props) => {
                 console.log(e);
             }
         }
-    }, [props.videoOn]);
+    }, [props.videoOn, props.micOn]);
 
     return (
         <div className={`row ${classes.VideoArea}`}>
