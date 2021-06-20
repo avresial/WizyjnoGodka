@@ -131,6 +131,13 @@ async def send_invitation(sender_sid, receiver_sid):
             await sio.emit('room-is-already-set', to=sender_sid)
             return
 
+    for room in rooms_list:
+        if rooms_list[room].if_sid_is_in_room(receiver_sid):
+            logger.info(f"receiver sid: {receiver_sid} is already in the room")
+            await sio.emit('room-is-already-set', to=sender_sid)
+            await sio.emit('invitation-request', data={'sender_sid': sender_sid}, to=receiver_sid)
+            return
+
     if invitations_list.count_same_invitations(sender_sid, receiver_sid) < 5:
         invitations_list.append(sender_sid, receiver_sid)
         logger.info(f"New pending invitation - sender sid: {sender_sid} & receiver sid: {receiver_sid}")
@@ -163,7 +170,7 @@ async def accept_invitation(sid, data):
         await sio.emit('invite-accepted', data=str, to=sender_sid)
 
         json_list = rooms_list[room].get_all_sid_from_room()
-        await sio.emit('create-peer', data=json_list, room=room)
+        await sio.emit('create-peer', data={'room_id': room, 'peers': json_list}, room=room)
     else:
         logger.error(f"{sender_sid}->{receiver_sid} invitation not found")
 

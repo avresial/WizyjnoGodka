@@ -102,7 +102,7 @@ const VideoArea = (props) => {
         });
 
           socket.on('create-peer', data => {
-            const arr = JSON.parse(data);
+            const arr = JSON.parse(data.peers);
             arr.forEach( (element, index, array) => {
               if (socket.id !== element) {
                 createPeerConnection(element);
@@ -258,18 +258,6 @@ const VideoArea = (props) => {
 
 
     useEffect(() => {
-      if (peerStreams.length === 0) {
-          try{
-            const tracks = stream.current.getTracks();
-            tracks.forEach(function(track) {
-                track.stop();
-                isStreamSet = false;
-            });
-            stream.current = null;
-        } catch (e) {
-            console.log(e);
-        }
-      }
     }, [peerStreams]);
 
 

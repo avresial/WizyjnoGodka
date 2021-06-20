@@ -6,6 +6,7 @@ import StarterPanel from './Assets/StarterPanel/StarterPanel'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import LoggerBox from './Assets/LoggerBox/LoggerBox'
 import CallBox from './Assets/CallBox/CallBox'
+import RoomContainer from './Assets/RoomContainer/RoomContainer'
 import {socket} from './Assets/Context/socket'
 
 
@@ -28,6 +29,7 @@ const App = () => {
   const [isCallingTo, setIsCallingTo] = useState(false);
   const [isCallingFrom, setIsCallingFrom] = useState(false);
   const [isInRoom, setIsInRoom] = useState(true);
+  const [roomId, setRoomId] = useState('');
 
   const [videoOn, setVideoOn] = useState(true);
   const [micOn, setMicOn] = useState(true);
@@ -71,8 +73,12 @@ const App = () => {
     });
 
     socket.on('create-peer', data => {
-      // create list of current room
+      setRoomId(data.room_id);
       console.log(data);
+    });
+
+    socket.on('invitation-request', data => {
+      appendNewLog(`${data.sender_sid} wants to call you`);
     });
 
   }, []);
@@ -240,6 +246,7 @@ const App = () => {
 
   return(
     <Container fluid>
+      <RoomContainer roomId={roomId}/>
       {
         isCallingTo || isCallingFrom
         ? <CallBox isCallingTo={isCallingTo} isCallingFrom={isCallingFrom} 

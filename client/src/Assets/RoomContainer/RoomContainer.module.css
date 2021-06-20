@@ -1,0 +1,15 @@
+.RoomContainer {
+    position:absolute;
+    z-index: 100;
+    right: 0;
+    top: 0;
+    width: 350px;
+    height: 40px;
+    margin: 5px;
+    border-radius:6px;
+    border: 1px solid white;
+    background-color:rgb(25, 117, 223);
+    color:black;
+    text-align:center;
+    padding-top:5px;
+}
