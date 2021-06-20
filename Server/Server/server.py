@@ -27,8 +27,13 @@ class Room:
         else:
             return False
 
+    def are_sids_in_room(self, sid1, sid2):
+        if self.sid_list.__contains__(sid1) and self.sid_list.__contains__(sid2):
+            return True
+        else:
+            return False
 
-#BaseAllRoom = 'All'
+
 users_list = UserList()
 invitations_list = InvitationList()
 rooms_list = {}
@@ -54,6 +59,7 @@ async def connect(sid, environ):
     logger.success(f"Connected {sid}")
     logger.debug(f"rooms list: {rooms_list}")
     users_list.append_new_user(sid)
+
 
 @sio.event
 async def disconnect(sid):
@@ -119,6 +125,12 @@ async def pass_new_clients_name(sid, name):
 @sio.on('send-invitation')
 @logger.catch
 async def send_invitation(sender_sid, receiver_sid):
+    for room in rooms_list:
+        if rooms_list[room].are_sids_in_room(sender_sid, receiver_sid):
+            logger.warning(f"sender sid: {sender_sid} & receiver sid: {receiver_sid} are already in the same room")
+            await sio.emit('room-is-already-set', to=sender_sid)
+            return
+
     if invitations_list.count_same_invitations(sender_sid, receiver_sid) < 5:
         invitations_list.append(sender_sid, receiver_sid)
         logger.info(f"New pending invitation - sender sid: {sender_sid} & receiver sid: {receiver_sid}")
@@ -140,11 +152,11 @@ async def accept_invitation(sid, data):
     receiver_sid = new_data["receiver_sid"]
     sender_sid = new_data["sender_sid"]
     
-    if invitations_list.invitation_exist(sender_sid,receiver_sid):
+    if invitations_list.invitation_exist(sender_sid, receiver_sid):
         if len(sio.rooms(sender_sid)) > 1:
             room = add_receiver_to_already_existed_room(sender_sid, receiver_sid)
         else:
-            room = create_new_room_and_add_participants(sender_sid,receiver_sid)
+            room = create_new_room_and_add_participants(sender_sid, receiver_sid)
         logger.info(f"{receiver_sid} accepted invitation from {sender_sid}")
         invitations_list.remove(sender_sid, receiver_sid)
         str = json.dumps(Invitation(sender_sid, receiver_sid), indent=2, cls=EncodeInvitation)
@@ -152,7 +164,6 @@ async def accept_invitation(sid, data):
 
         json_list = rooms_list[room].get_all_sid_from_room()
         await sio.emit('create-peer', data=json_list, room=room)
-
     else:
         logger.error(f"{sender_sid}->{receiver_sid} invitation not found")
 
@@ -218,10 +229,36 @@ async def decline_invitation(sid):
     logger.debug(f"after removal:{sio.rooms(sid)}")
 
 
+@sio.on('toggle-mic')
+async def toggle_mic(sid):
+    for room in sio.rooms(sid):
+        if room != sid:
+            await sio.emit('toggle-mic', data={'sender_sid': sid}, to=room)
+
+
+@sio.on('toggle-video')
+async def toggle_mic(sid):
+    for room in sio.rooms(sid):
+        if room != sid:
+            await sio.emit('toggle-video', data={'sender_sid': sid}, to=room)
+
+
 def remove_from_all_rooms(sid):
     logger.debug(f"{sid} is being removed from all rooms")
     for room in sio.rooms(sid):
         if room != sid:
+            sio.leave_room(sid, room)
+
+
+@sio.on('leave-room')
+async def leave_rooms(sid):
+    for custom_room in rooms_list:
+        if rooms_list[custom_room].if_sid_is_in_room(sid):
+            rooms_list[custom_room].remove_from_list(sid)
+
+    for room in sio.rooms(sid):
+        if room != sid:
+            await sio.emit('remove-peer-connection', data={'sender_sid': sid}, room=room)
             sio.leave_room(sid, room)
 
 

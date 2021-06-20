@@ -18,10 +18,6 @@ const RightPanel = (props) => {
     const sendButtonRef = useRef();
     const textAreaRef = useRef();
 
-    const styleButtonRowRight = {
-        justifyContent: 'right'
-    };
-    
     const formGroupStype = {
         width: '100%'
     };
@@ -39,7 +35,7 @@ const RightPanel = (props) => {
         <div className = {style}>
             <div className='row'>           
                 <div className='col'>
-                    <VideoArea connections={props.connections} videoOn = {props.videoOn} micOn = {props.micOn}/>
+                    <VideoArea setCurrentRoomList={props.setCurrentRoomList} connections={props.connections} videoOn = {props.videoOn} micOn = {props.micOn}/>
                 </div>
             </div>
             <div className='row'>
@@ -52,7 +48,7 @@ const RightPanel = (props) => {
                             <Button onClick={props.onMicButtonClick}><img alt='' src={props.micOn ? MicrophoneOn : MicrophoneOff} ></img></Button>
                         </div>
                         <div className='col'>
-                            <Button><img alt='' src={EndCall}></img></Button>
+                            <Button onClick={props.disconnectFromRoomButton}><img alt='' src={EndCall}></img></Button>
                         </div>
                     </div>
                 </div>

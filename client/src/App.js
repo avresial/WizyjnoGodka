@@ -22,16 +22,19 @@ const App = () => {
   const invitationData = useRef(null);
   const [yourUserName, setName] = useState('default');
   const [isNameSet, setIsNameSet] = useState(false);
-  const [videoOn, setVideoOn] = useState(false);
-  const [micOn, setMicOn] = useState(false);
   const [messageList, setMessageList] = useState([]);
   const [listOfConnections, setListOfConnections] = useState([]);
   const [logList, setLogList] = useState([]);
   const [isCallingTo, setIsCallingTo] = useState(false);
   const [isCallingFrom, setIsCallingFrom] = useState(false);
   const [isInRoom, setIsInRoom] = useState(true);
+
+  const [videoOn, setVideoOn] = useState(true);
+  const [micOn, setMicOn] = useState(true);
+
   const logTimeout = useRef();
   const [callerName, setCallerName] = useState('');
+  const [currentRoomList, setCurrentRoomList] = useState([]);
 
   useEffect(() => {
     socket.on('connect', () => {
@@ -67,11 +70,16 @@ const App = () => {
         return tempList;
       });
     });
+
+    socket.on('create-peer', data => {
+      // create list of current room
+      console.log(data);
+    });
+
   }, []);
 
   useEffect( () => {
     socket.on('receive-invite', (data) => {
-      console.log(data);
       invitationData.current = data;
       let caller_sid = JSON.parse(data).sender_sid;
       setCallerName(caller_sid);
@@ -80,6 +88,11 @@ const App = () => {
       } else {
         appendNewLog('There is another call already!');
       }
+    });
+
+    socket.on('room-is-already-set', () => {
+      setIsCallingTo(false);
+      setIsCallingFrom(false);
     });
 
     socket.on('invite-expired-receiver', (data) => {
@@ -107,10 +120,12 @@ const App = () => {
   }, [isCallingFrom, isCallingTo]);
 
   const onButtonClickHandler = () => {
+    socket.emit('toggle-video');
     setVideoOn(!videoOn);
   };
 
   const onMicClickHandler = () => {
+    socket.emit('toggle-mic');
     setMicOn(!micOn);
   }
 
@@ -171,7 +186,6 @@ const App = () => {
     SetFalseIsCalling();
   }
 
-
   const setUserName = (userName) => {
     if (!userName) {
       appendNewLog(`Name cannot be empty!`);
@@ -212,6 +226,17 @@ const App = () => {
     })
   };
 
+  const SetCurrentRoomList = (data) => {
+    setCurrentRoomList( currentList => {
+      currentList = data;
+      return currentList;
+    });
+  };
+
+  const DisconnectFromRoom = () => {
+    socket.emit('leave-room');
+  }
+
   // window.onunload = window.onbeforeunload = () => {
   //   socket.close();
   // };
@@ -241,7 +266,9 @@ const App = () => {
               onSendButtonClick={(text) => onMessageSend(text)} 
               videoOn={videoOn} 
               micOn={micOn}
-              messageList={messageList}/>
+              messageList={messageList}
+              setCurrentRoomList={SetCurrentRoomList}
+              disconnectFromRoomButton={DisconnectFromRoom}/>
             : null
           }
         </div>
