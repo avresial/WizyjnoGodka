@@ -28,7 +28,7 @@ const App = () => {
   const [logList, setLogList] = useState([]);
   const [isCallingTo, setIsCallingTo] = useState(false);
   const [isCallingFrom, setIsCallingFrom] = useState(false);
-  const [isInRoom, setIsInRoom] = useState(true);
+  const [isInRoom, setIsInRoom] = useState(false);
   const [roomId, setRoomId] = useState('');
 
   const [videoOn, setVideoOn] = useState(true);
@@ -74,7 +74,6 @@ const App = () => {
 
     socket.on('create-peer', data => {
       setRoomId(data.room_id);
-      console.log(data);
     });
 
     socket.on('invitation-request', data => {
@@ -233,6 +232,7 @@ const App = () => {
 
   const DisconnectFromRoom = () => {
     socket.emit('leave-room');
+    setIsInRoom(false);
   }
 
   const SetMicAndVidOff = () => {
@@ -240,13 +240,8 @@ const App = () => {
     setVideoOn(false);
   }
 
-  // window.onunload = window.onbeforeunload = () => {
-  //   socket.close();
-  // };
-
   return(
     <Container fluid>
-      <RoomContainer roomId={roomId}/>
       {
         isCallingTo || isCallingFrom
         ? <CallBox isCallingTo={isCallingTo} isCallingFrom={isCallingFrom} 
@@ -264,17 +259,20 @@ const App = () => {
         <div className = 'row vh-100'>
           <LeftPanel connections={listOfConnections} sendRequest={SendConnectionRequest} />
           {
-            isInRoom ? <RightPanel isInRoom={isInRoom} connections={listOfConnections} 
-              onVideoButtonClick={onButtonClickHandler} 
-              onMicButtonClick={onMicClickHandler}
-              onSendButtonClick={(text) => onMessageSend(text)} 
-              videoOn={videoOn} 
-              micOn={micOn}
-              messageList={messageList}
-              disconnectFromRoomButton={DisconnectFromRoom}
-              setMicAndVidOff={SetMicAndVidOff}/>
+            isInRoom ? <RoomContainer roomId={roomId}/>
             : null
           }
+
+          <RightPanel isInRoom={isInRoom} connections={listOfConnections}
+            onVideoButtonClick={onButtonClickHandler} 
+            onMicButtonClick={onMicClickHandler}
+            onSendButtonClick={(text) => onMessageSend(text)} 
+            videoOn={videoOn} 
+            micOn={micOn}
+            messageList={messageList}
+            disconnectFromRoomButton={DisconnectFromRoom}
+            setMicAndVidOff={SetMicAndVidOff}/>
+
         </div>
         : <div className = 'row vh-100'>
           <StarterPanel OnClick={(userName) => setUserName(userName)}></StarterPanel>

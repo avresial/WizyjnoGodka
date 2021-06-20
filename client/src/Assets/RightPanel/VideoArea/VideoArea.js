@@ -256,11 +256,6 @@ const VideoArea = (props) => {
 
     }, []);
 
-
-    useEffect(() => {
-    }, [peerStreams]);
-
-
     useEffect(() => {
       if (!props.videoOn) {
         const vid = userVideo.current.srcObject.getVideoTracks()[0];
@@ -274,7 +269,10 @@ const VideoArea = (props) => {
 
     return (
         <div className={`row ${classes.VideoArea}`}>
-            <Video videoOn = {true} userVideo = {userVideo} ></Video>
+            {
+              props.isInRoom ? <Video videoOn = {true} userVideo = {userVideo} ></Video>
+              : null
+            }
             {
                 peerStreams.map( currentItem => {
                     return(

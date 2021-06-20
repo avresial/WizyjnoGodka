@@ -35,11 +35,13 @@ const RightPanel = (props) => {
         <div className = {style}>
             <div className='row'>           
                 <div className='col'>
-                    <VideoArea connections={props.connections} videoOn = {props.videoOn} micOn = {props.micOn} setMicAndVidOff = {props.setMicAndVidOff}/>
+                    <VideoArea connections={props.connections} videoOn = {props.videoOn} micOn = {props.micOn} setMicAndVidOff = {props.setMicAndVidOff} isInRoom={props.isInRoom}/>
                 </div>
             </div>
             <div className='row'>
-                <div className={`col ${classes.styleControlPanel}`}>
+                {
+                    props.isInRoom ?
+                    <div className={`col ${classes.styleControlPanel}`}>
                     <div className='row'>
                         <div className='col'>
                             <Button onClick={props.onVideoButtonClick}><img alt='' src={props.videoOn ? CameraOn : CameraOff}></img></Button>
@@ -52,6 +54,9 @@ const RightPanel = (props) => {
                         </div>
                     </div>
                 </div>
+                : null
+                }
+
             </div>
 
             <div className='row'>
