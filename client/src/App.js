@@ -6,6 +6,7 @@ import StarterPanel from './Assets/StarterPanel/StarterPanel'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import LoggerBox from './Assets/LoggerBox/LoggerBox'
 import CallBox from './Assets/CallBox/CallBox'
+import RoomContainer from './Assets/RoomContainer/RoomContainer'
 import {socket} from './Assets/Context/socket'
 
 
@@ -22,13 +23,17 @@ const App = () => {
   const invitationData = useRef(null);
   const [yourUserName, setName] = useState('default');
   const [isNameSet, setIsNameSet] = useState(false);
-  const [videoOn, setVideoOn] = useState(false);
   const [messageList, setMessageList] = useState([]);
   const [listOfConnections, setListOfConnections] = useState([]);
   const [logList, setLogList] = useState([]);
   const [isCallingTo, setIsCallingTo] = useState(false);
   const [isCallingFrom, setIsCallingFrom] = useState(false);
   const [isInRoom, setIsInRoom] = useState(false);
+  const [roomId, setRoomId] = useState('');
+
+  const [videoOn, setVideoOn] = useState(true);
+  const [micOn, setMicOn] = useState(true);
+
   const logTimeout = useRef();
   const [callerName, setCallerName] = useState('');
 
@@ -66,11 +71,19 @@ const App = () => {
         return tempList;
       });
     });
+
+    socket.on('create-peer', data => {
+      setRoomId(data.room_id);
+    });
+
+    socket.on('invitation-request', data => {
+      appendNewLog(`${data.sender_sid} wants to call you`);
+    });
+
   }, []);
 
   useEffect( () => {
     socket.on('receive-invite', (data) => {
-      console.log(data);
       invitationData.current = data;
       let caller_sid = JSON.parse(data).sender_sid;
       setCallerName(caller_sid);
@@ -79,6 +92,11 @@ const App = () => {
       } else {
         appendNewLog('There is another call already!');
       }
+    });
+
+    socket.on('room-is-already-set', () => {
+      setIsCallingTo(false);
+      setIsCallingFrom(false);
     });
 
     socket.on('invite-expired-receiver', (data) => {
@@ -106,8 +124,14 @@ const App = () => {
   }, [isCallingFrom, isCallingTo]);
 
   const onButtonClickHandler = () => {
+    socket.emit('toggle-video');
     setVideoOn(!videoOn);
   };
+
+  const onMicClickHandler = () => {
+    socket.emit('toggle-mic');
+    setMicOn(!micOn);
+  }
 
   const onMessageSend = (text) => {
     if (!text) {
@@ -166,7 +190,6 @@ const App = () => {
     SetFalseIsCalling();
   }
 
-
   const setUserName = (userName) => {
     if (!userName) {
       appendNewLog(`Name cannot be empty!`);
@@ -207,9 +230,15 @@ const App = () => {
     })
   };
 
-  // window.onunload = window.onbeforeunload = () => {
-  //   socket.close();
-  // };
+  const DisconnectFromRoom = () => {
+    socket.emit('leave-room');
+    setIsInRoom(false);
+  }
+
+  const SetMicAndVidOff = () => {
+    setMicOn(false);
+    setVideoOn(false);
+  }
 
   return(
     <Container fluid>
@@ -230,9 +259,20 @@ const App = () => {
         <div className = 'row vh-100'>
           <LeftPanel connections={listOfConnections} sendRequest={SendConnectionRequest} />
           {
-            isInRoom ? <RightPanel isInRoom={isInRoom} connections={listOfConnections} onVideoButtonClick={onButtonClickHandler} onSendButtonClick={(text) => onMessageSend(text)} videoOn={videoOn} messageList={messageList}/>
+            isInRoom ? <RoomContainer roomId={roomId}/>
             : null
           }
+
+          <RightPanel isInRoom={isInRoom} connections={listOfConnections}
+            onVideoButtonClick={onButtonClickHandler} 
+            onMicButtonClick={onMicClickHandler}
+            onSendButtonClick={(text) => onMessageSend(text)} 
+            videoOn={videoOn} 
+            micOn={micOn}
+            messageList={messageList}
+            disconnectFromRoomButton={DisconnectFromRoom}
+            setMicAndVidOff={SetMicAndVidOff}/>
+
         </div>
         : <div className = 'row vh-100'>
           <StarterPanel OnClick={(userName) => setUserName(userName)}></StarterPanel>

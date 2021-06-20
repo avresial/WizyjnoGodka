@@ -5,30 +5,23 @@ import Button from 'react-bootstrap/Button'
 import FormGroup from 'react-bootstrap/FormGroup'
 import MessageBox from '../MessageBox/MessageBox'
 import {KeyPress} from '../Helpers/KeyEvents'
+import CameraOff from './video-camera-off.png'
+import CameraOn from './video-camera-on.png'
+import EndCall from './end-call.png'
+import MicrophoneOn from './microphone-on.png'
+import MicrophoneOff from './microphone-off.png'
+import Send from './send.png'
 
 const RightPanel = (props) => {
-    const style = `${classes.RightPanel} col-md-8`;
+    const style = `${classes.RightPanel} col`;
     const overflowArea = useRef();
     const sendButtonRef = useRef();
     const textAreaRef = useRef();
 
-    const styleButtonRow = {
-        justifyContent: 'center'
-    };
-
-    const styleButtonRowRight = {
-        justifyContent: 'right'
-    };
-    
     const formGroupStype = {
         width: '100%'
     };
 
-    const overflowStyle = {
-        width: '100%',
-        maxHeight: '400px'
-    };
-    
     useEffect(() => {
         let scrollArea = overflowArea.current;
         scrollArea.scrollTop = scrollArea.scrollHeight;
@@ -42,14 +35,32 @@ const RightPanel = (props) => {
         <div className = {style}>
             <div className='row'>           
                 <div className='col'>
-                    <VideoArea connections={props.connections} videoOn = {props.videoOn} />
+                    <VideoArea connections={props.connections} videoOn = {props.videoOn} micOn = {props.micOn} setMicAndVidOff = {props.setMicAndVidOff} isInRoom={props.isInRoom}/>
                 </div>
             </div>
-            <div className='row' style={styleButtonRow}>
-                <Button onClick={props.onVideoButtonClick}> {props.videoOn ? 'hide' : 'show'} video</Button>
+            <div className='row'>
+                {
+                    props.isInRoom ?
+                    <div className={`col ${classes.styleControlPanel}`}>
+                    <div className='row'>
+                        <div className='col'>
+                            <Button onClick={props.onVideoButtonClick}><img alt='' src={props.videoOn ? CameraOn : CameraOff}></img></Button>
+                        </div>
+                        <div className='col'>
+                            <Button onClick={props.onMicButtonClick}><img alt='' src={props.micOn ? MicrophoneOn : MicrophoneOff} ></img></Button>
+                        </div>
+                        <div className='col'>
+                            <Button onClick={props.disconnectFromRoomButton}><img alt='' src={EndCall}></img></Button>
+                        </div>
+                    </div>
+                </div>
+                : null
+                }
+
             </div>
-            <div className='row' >
-                <div ref={overflowArea} className='overflow-auto' style={overflowStyle} >
+
+            <div className='row'>
+                <div ref={overflowArea} className={`overflow-auto ${classes.overflowStyle}`} >
                 {
                     props.messageList.map((currentElement, index) => {
                         return(
@@ -59,16 +70,20 @@ const RightPanel = (props) => {
                 }
                 </div>
             </div>
+
             <div className='row'>
-                <FormGroup style={formGroupStype}>
-                    <textarea ref={textAreaRef} maxLength='1000' className="form-control"></textarea>
-                </FormGroup>
-            </div>
-            <div className='row' style={styleButtonRowRight}>
-                <Button ref={sendButtonRef} onClick={() => { props.onSendButtonClick(
-                    document.getElementsByClassName('form-control')[0].value); 
-                    document.getElementsByClassName('form-control')[0].value = '';
-                    }}>Send</Button>
+                <div className={classes.test}>
+                    <FormGroup style={formGroupStype}>
+                        <textarea ref={textAreaRef} maxLength='1000' className="form-control"></textarea>
+                    </FormGroup>
+                    <div className={classes.SendButton}>
+                        <Button ref={sendButtonRef} onClick={() => { props.onSendButtonClick(
+                            document.getElementsByClassName('form-control')[0].value); 
+                            document.getElementsByClassName('form-control')[0].value = '';
+                            }}><img alt='' src={Send}></img>
+                        </Button>
+                    </div>
+                </div>
             </div>
         </div>
     );
