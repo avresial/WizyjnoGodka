@@ -62,6 +62,7 @@ const VideoArea = (props) => {
 
                   return 0;
                 });
+                stream.current = null;
                 isStreamSet = false;
             });
           } catch (e) {
@@ -127,6 +128,28 @@ const VideoArea = (props) => {
               peerConnections[sender_id].addEventListener('iceconnectionstatechange', event => {
                 if (peerConnections[sender_id].iceConnectionState === 'failed') {
                   peerConnections[sender_id].restartIce();
+                }
+                else if (peerConnections[sender_id].iceConnectionState === 'disconnected') {
+                  console.log("disconnected");
+                  try {
+                    peerConnections[sender_id].removeTrack(senderTracks[sender_id]);
+                    delete senderTracks[sender_id];
+                  } catch (e) {
+                    console.log('removing sender tracks err:' + e);
+                  }
+                  peerConnections[sender_id].close();
+                  delete peerConnections[sender_id];
+      
+                  setPeerStreams( peerStreams => {
+                    const tempPeerStreams = [...peerStreams];
+                    tempPeerStreams.map( (streamItem, index) => {
+                      if (streamItem.id === sender_id) {
+                        tempPeerStreams.splice(index, 1);
+                      };
+                      return 0;
+                    });
+                    return tempPeerStreams;
+                  });
                 }
               });
 
@@ -234,6 +257,21 @@ const VideoArea = (props) => {
     }, []);
 
 
+    useEffect(() => {
+      if (peerStreams.length === 0) {
+          try{
+            const tracks = stream.current.getTracks();
+            tracks.forEach(function(track) {
+                track.stop();
+                isStreamSet = false;
+            });
+            stream.current = null;
+        } catch (e) {
+            console.log(e);
+        }
+      }
+    }, [peerStreams]);
+
 
     useEffect(() => {
       if (!props.videoOn) {
@@ -244,7 +282,6 @@ const VideoArea = (props) => {
         vid.enabled = true;
       }
   }, [props.videoOn]);
-
 
 
     return (

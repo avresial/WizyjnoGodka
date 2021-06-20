@@ -35,7 +35,7 @@ const RightPanel = (props) => {
         <div className = {style}>
             <div className='row'>           
                 <div className='col'>
-                    <VideoArea setCurrentRoomList={props.setCurrentRoomList} connections={props.connections} videoOn = {props.videoOn} micOn = {props.micOn}/>
+                    <VideoArea connections={props.connections} videoOn = {props.videoOn} micOn = {props.micOn} setMicAndVidOff = {props.setMicAndVidOff}/>
                 </div>
             </div>
             <div className='row'>

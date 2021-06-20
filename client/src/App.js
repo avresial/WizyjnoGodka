@@ -34,7 +34,6 @@ const App = () => {
 
   const logTimeout = useRef();
   const [callerName, setCallerName] = useState('');
-  const [currentRoomList, setCurrentRoomList] = useState([]);
 
   useEffect(() => {
     socket.on('connect', () => {
@@ -226,15 +225,13 @@ const App = () => {
     })
   };
 
-  const SetCurrentRoomList = (data) => {
-    setCurrentRoomList( currentList => {
-      currentList = data;
-      return currentList;
-    });
-  };
-
   const DisconnectFromRoom = () => {
     socket.emit('leave-room');
+  }
+
+  const SetMicAndVidOff = () => {
+    setMicOn(false);
+    setVideoOn(false);
   }
 
   // window.onunload = window.onbeforeunload = () => {
@@ -267,8 +264,8 @@ const App = () => {
               videoOn={videoOn} 
               micOn={micOn}
               messageList={messageList}
-              setCurrentRoomList={SetCurrentRoomList}
-              disconnectFromRoomButton={DisconnectFromRoom}/>
+              disconnectFromRoomButton={DisconnectFromRoom}
+              setMicAndVidOff={SetMicAndVidOff}/>
             : null
           }
         </div>
