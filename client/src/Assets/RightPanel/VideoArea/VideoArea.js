@@ -14,6 +14,63 @@ const VideoArea = (props) => {
     const [peerStreams, setPeerStreams] = useState([]);
 
     useEffect( () => {
+        socket.on('remove-peer-connection', async data => {
+          if (socket.id !== data.sender_sid) {
+            try {
+              peerConnections[data.sender_sid].removeTrack(senderTracks[data.sender_sid]);
+              delete senderTracks[data.sender_sid];
+            } catch (e) {
+              console.log('removing sender tracks err:' + e);
+            }
+            peerConnections[data.sender_sid].close();
+            delete peerConnections[data.sender_sid];
+
+            setPeerStreams( peerStreams => {
+              const tempPeerStreams = [...peerStreams];
+              tempPeerStreams.map( (streamItem, index) => {
+                if (streamItem.id === data.sender_sid) {
+                  tempPeerStreams.splice(index, 1);
+                };
+                return 0;
+              });
+              return tempPeerStreams;
+            });
+          }
+          else {
+            try {
+            const tracks = stream.current.getTracks();
+            tracks.forEach(function(track) {
+                track.stop();
+                Object.keys(peerConnections).map(function(key, index) {
+
+                  setPeerStreams( peerStreams => {
+                    const tempPeerStreams = [...peerStreams];
+                    tempPeerStreams.map( (streamItem, index) => {
+                      if (streamItem.id === key) {
+                        tempPeerStreams.splice(index, 1);
+                      };
+                      return 0;
+                    });
+                    return tempPeerStreams;
+                  });
+
+                  peerConnections[key].removeTrack(senderTracks[key]);
+                  delete senderTracks[key];
+
+                  peerConnections[key].close();
+                  delete peerConnections[key];
+
+                  return 0;
+                });
+                stream.current = null;
+                isStreamSet = false;
+            });
+          } catch (e) {
+            console.log(e);
+          }
+          }
+        });
+
         socket.on('candidate', async data => {
           try {
             if (data.candidate) {
@@ -45,7 +102,7 @@ const VideoArea = (props) => {
         });
 
           socket.on('create-peer', data => {
-            const arr = JSON.parse(data);
+            const arr = JSON.parse(data.peers);
             arr.forEach( (element, index, array) => {
               if (socket.id !== element) {
                 createPeerConnection(element);
@@ -60,11 +117,39 @@ const VideoArea = (props) => {
                 peerConnections[sender_id] = pc;
               } else {
                 return;
-              }
+              } 
+
+              peerConnections[sender_id].oniceconnectionstatechange = (event) => {
+                if (peerConnections[sender_id].iceConnectionState === "closed") {
+                  console.log('iceConnection closed'); 
+                }
+              };
 
               peerConnections[sender_id].addEventListener('iceconnectionstatechange', event => {
                 if (peerConnections[sender_id].iceConnectionState === 'failed') {
                   peerConnections[sender_id].restartIce();
+                }
+                else if (peerConnections[sender_id].iceConnectionState === 'disconnected') {
+                  console.log("disconnected");
+                  try {
+                    peerConnections[sender_id].removeTrack(senderTracks[sender_id]);
+                    delete senderTracks[sender_id];
+                  } catch (e) {
+                    console.log('removing sender tracks err:' + e);
+                  }
+                  peerConnections[sender_id].close();
+                  delete peerConnections[sender_id];
+      
+                  setPeerStreams( peerStreams => {
+                    const tempPeerStreams = [...peerStreams];
+                    tempPeerStreams.map( (streamItem, index) => {
+                      if (streamItem.id === sender_id) {
+                        tempPeerStreams.splice(index, 1);
+                      };
+                      return 0;
+                    });
+                    return tempPeerStreams;
+                  });
                 }
               });
 
@@ -96,7 +181,16 @@ const VideoArea = (props) => {
                 
                 setPeerStreams( peerStreams => {
                   const tempPeerStreams = [...peerStreams];
-                  tempPeerStreams.push({id: sender_id, data: stream});
+                  let isInList = false;
+                  tempPeerStreams.map( (streamItem, index) => {
+                    if (streamItem.id === sender_id) {
+                      isInList = true;
+                    };
+                    return 0;
+                  });
+                  if (!isInList) {
+                    tempPeerStreams.push({id: sender_id, data: stream});
+                  }
                   return tempPeerStreams;
                 });
               }; 
@@ -111,7 +205,25 @@ const VideoArea = (props) => {
                   senderTracks[sender_id] = peerConnections[sender_id].addTrack(track, stream.current);
                 });
                 isStreamSet = true;
+              } else {
+                navigator.mediaDevices.getUserMedia({audio:true, video:true}).then((mediaStream) => {
+                  stream.current = mediaStream;
+                  if(userVideo.current) {
+                      userVideo.current.srcObject = mediaStream;
+                      if (!isStreamSet) {
+                        const tracks = stream.current.getTracks();
+                        Object.keys(peerConnections).map(function(key, index) {
+                          tracks.forEach( (track) => {
+                            senderTracks[key] = peerConnections[key].addTrack(track, stream.current);
+                          });
+                          return 0;
+                        });
+                        isStreamSet = true;
+                      }
+                  }
+              });
               }
+
               console.log('PeerConnection created');
             } catch (error) {
               console.error('PeerConnection failed: ', error);
@@ -145,48 +257,26 @@ const VideoArea = (props) => {
     }, []);
 
     useEffect(() => {
-        if (props.videoOn) {
-            navigator.mediaDevices.getUserMedia({audio:false, video:true}).then((mediaStream) => {
-                stream.current = mediaStream;
-                if(userVideo.current) {
-                    userVideo.current.srcObject = mediaStream;
-                    if (!isStreamSet) {
-                      const tracks = stream.current.getTracks();
-                      Object.keys(peerConnections).map(function(key, index) {
-                        tracks.forEach( (track) => {
-                          senderTracks[key] = peerConnections[key].addTrack(track, stream.current);
-                        });
-                        return 0;
-                      });
-                      isStreamSet = true;
-                    }
-                }
-            });
-        }
-        else {
-            try{
-                const tracks = stream.current.getTracks();
-                tracks.forEach(function(track) {
-                    track.stop();
-                    Object.keys(peerConnections).map(function(key, index) {
-                      peerConnections[key].removeTrack(senderTracks[key]);
-                      return 0;
-                    });
-                    isStreamSet = false;
-                });
-            } catch (e) {
-                console.log(e);
-            }
-        }
-    }, [props.videoOn]);
+      if (!props.videoOn) {
+        const vid = userVideo.current.srcObject.getVideoTracks()[0];
+        vid.enabled = false;
+      } else if (isStreamSet && props.videoOn) {
+        const vid = userVideo.current.srcObject.getVideoTracks()[0];
+        vid.enabled = true;
+      }
+  }, [props.videoOn]);
+
 
     return (
         <div className={`row ${classes.VideoArea}`}>
-            <Video videoOn = {true} userVideo = {userVideo} ></Video>
+            {
+              props.isInRoom ? <Video videoOn = {true} userVideo = {userVideo} ></Video>
+              : null
+            }
             {
                 peerStreams.map( currentItem => {
                     return(
-                        <VideoGuest key = {currentItem.id} videoOn = {true} pc={currentItem.data}></VideoGuest>
+                        <VideoGuest key = {currentItem.id} videoOn = {true} pc={currentItem.data} id = {currentItem.id}></VideoGuest>
                     );
                 })
             }
