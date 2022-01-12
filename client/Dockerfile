@@ -11,4 +11,6 @@ COPY . .
 
 EXPOSE 3000
 
+RUN echo $IP_ADDRES
+
 CMD ["npm", "start"]

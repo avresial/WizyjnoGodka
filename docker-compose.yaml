@@ -1,0 +1,31 @@
+version: '3.3'
+services:
+  backend:
+    container_name: zoom-backend
+    restart: always
+    build: ./Server
+    ports:
+      - "8000:8000"
+    networks:
+      zoom_network:
+        ipv4_address: 172.20.0.5
+  frontend:
+    container_name: zoom-frontend
+    restart: always
+    build: ./client
+    environment:
+      IP_ADDRES: '172.20.0.5'
+      PORT: '8000'
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks: 
+      - zoom_network
+
+networks:
+  zoom_network:
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.20.0.0/24"
