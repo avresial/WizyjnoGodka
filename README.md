@@ -1,4 +1,53 @@
 # SIIMZoomCloneApp
+## Spis treści
+- [Opis projektu](#opis_projektu)
+- [Demo](#demo)
+- [Instrukcja instalacji i uruchomienia](#instrukcja_instalacji_i_uruchomienia)
+- [Założenia projektu i jego realizacja](#założenia_projektu)
+- [Licencja](#licencja)
+
+## Opis_projektu
+
+## Demo
+#### Ekran startowy
+![screenshot](SIIMZoomCloneApp.png)
+#### Próba nawiązania połączenia z wybranym użytkownikiem
+![screenshot](SIIMZoomCloneApp2.png)
+
+Aplikacja została zamieszczona na platformie Heroku i można ją sprawdzić pod poniższym linkiem:
+[SIIMZoomCloneApp na Heroku](https://aqueous-thicket-27796.herokuapp.com/)
+
+## Wykożystane narzedzia
+- [Python](https://www.python.org/downloads/)
+- [Node.js](https://nodejs.org/en/)
+
+## Instrukcja_instalacji_i_uruchomienia
+
+### Uruchomienie Lokalnie
+
+#### Kroki dla clienta:
+- `npm install`
+- `npm start`
+
+#### Kroki dla Serwera:
+- `pip install -r ./requirements.txt`
+- `python ./main.py`
+
+### Uruchomienie przy pomocy konteneryzacji
+#### Kroki dla docker-compose:
+- `sudo docker-compose build`
+- `sudo docker-compose up`
+
+#### Kroki dla dockera:
+##### Kroki dla clienta:
+- `sudo docker build -t client .`
+- `sudo docker run -dp 3000:3000 client -e IP_ADDRES='127.0.0.1'`
+
+##### Kroki dla Serwera:
+- `sudo docker build -t server .`
+- `sudo docker run -dp 8000:8000 server`
+
+## Założenia_projektu
 
 <ol>
 	<li><H5>Nazwa projektu:</H5><p>Video czat (Wizyjno Godka)</p></li>
@@ -47,3 +96,7 @@
 	</ul>
 	<p>Dajcie znać co myślicie, z czym się zgadzacie a co byście poprawili. W tych zagwozdkach możecie dać jakieś +1 jeśli sądzicie że takie ficzersy mają się pojawić.</p>
 </ol>
+
+## Licencja
+- [MIT License](https://choosealicense.com/licenses/mit/)
+- [Copyright 2020 © ](https://github.com/avresial/SIIMZoomCloneApp)
