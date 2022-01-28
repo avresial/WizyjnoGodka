@@ -1,6 +1,8 @@
 # SIIMZoomCloneApp
 ## Spis treści
+- [Cel projektu](#cel_projektu)
 - [Opis projektu](#opis_projektu)
+- [Opis API](#opis_api)
 - [Demo](#demo)
 - [Instrukcja instalacji i uruchomienia](#instrukcja_instalacji_i_uruchomienia)
 - [Założenia projektu i jego realizacja](#założenia_projektu)
@@ -17,7 +19,7 @@
 Aplikacja została zamieszczona na platformie Heroku i można ją sprawdzić pod poniższym linkiem:
 [SIIMZoomCloneApp na Heroku](https://aqueous-thicket-27796.herokuapp.com/)
 
-## Wykożystane narzedzia
+## Wykorzystane narzedzia
 - [Python](https://www.python.org/downloads/)
 - [Node.js](https://nodejs.org/en/)
 
@@ -47,55 +49,213 @@ Aplikacja została zamieszczona na platformie Heroku i można ją sprawdzić pod
 - `sudo docker build -t server .`
 - `sudo docker run -dp 8000:8000 server`
 
-## Założenia_projektu
+## Cel Projektu
 
-<ol>
-	<li><H5>Nazwa projektu:</H5><p>Video czat (Wizyjno Godka)</p></li>
-	<li><H5>Wizja projektu:</H5>
-	<p>Celem projektu jest implementacja prostego komunikatora, pozwalającego na prowadzenie rozmów z wykorzystaniem strumieniowania wideo oraz audio. Projekt będzie tworzony od podstaw. Głównymi problemami, z którymi będziemy się mierzyć są<br>- poprawne rozdzielenie połączonych użytkowników na pokoje/kanały, w celu umożliwienia prywatnej rozmowy oraz zoptymalizowanie pracy serwera, w szczególności strumieniowania obrazu i dźwięku pomiędzy poszczególnymi socketami. Zła implementacja może prowadzić do występowania opóźnień, a nawet do sytuacji, w której serwer przestanie odpowiadać. Wykonując ten projekt, znacząco rozwiniemy swoje umiejętności w zakresie programowania w językach JavaScript oraz Python. Dodatkowo znacząco rozwiniemy wiedzę z zakresu socketów oraz komunikacji z wykorzystaniem protokołu TCP.</p>
-</li>
-<li><H5>Cele projektu</H5>
-	<ul>
-		<li>Implementacja serwera w Pythonie wykorzystując moduły aiohttp i python-socketio,</li>
-		<li>Implementacja aplikacji webowej w JavaScript wykorzystując narzędzia React (zgodnie ze standardem WebRTC).</li>
-	</ul>
-	</li>
-	 <li><H5>Zakres projektu</H5>
-	 	<p>Głównym zadaniem niniejszego projektu jest ustanowienie połączenia pomiędzy co najmniej dwoma klientami. W celu umożliwienia takiego połączenia, serwer będzie musiał posiadać możliwość wysłania “listy aktualnie podłączonych użytkowników”. Lista powinna być cyklicznie aktualizowana. Stworzone połączenia w serwerze będą zagregowane do unikalnych kanałów/pokojów, co ułatwi późniejsze ewentualne implementowanie możliwości rozmowy pomiędzy większą ilością klientów. Aplikacja kliencka będzie aplikacją webową. W jej skład wchodzi panel wyboru rozmówców oraz panel, w którym będzie wyświetlane wideo z naszej kamery oraz wideo z kamery odbiorcy. Projekt będzie przystosowany do umieszczenia go na specjalnych stronach hostingowych wspierających serwery w Pythonie oraz JavaScripcie. Dodatkowo, aplikacja będzie mogła również działać w sieci lokalnej. Projekt nie zakłada wsparcia dla komunikacji tekstowej.</p></li>
-	  <li><H5>Etapy w projekcie</H5>
-	  	<ul>
-			<li>Przegląd gotowych rozwiązań,</li>
-			<li>Wybranie rozwiązania,</li>
-			<li>Implementacja Serwera i aplikacji webowej,</li>
-			<li>Stworzenie unit testów,</li>
-			<li>Testowanie gotowego projektu</li>
-		</ul>
-	  </li>	 
-	<li><H5>Charakterystyka narzędzi</H5>
-		<ul>
-			<li>JavaScript - skryptowy język programowania, stworzony przez firmę Netscape, najczęściej stosowany na stronach internetowych. Twórcą JavaScriptu jest Brendan Eich,
-			<ul>
-					<li>React - Biblioteka języka programowania JavaScript, która wykorzystywana jest do tworzenia interfejsów graficznych aplikacji internetowych. Została stworzona przez Jordana Walke, programistę Facebooka, a zainspirowana przez rozszerzenie języka PHP – XHP,</li>
-					<li>Socket.IO - Biblioteka JavaScript do aplikacji internetowych w czasie rzeczywistym. Umożliwia dwukierunkową komunikację w czasie rzeczywistym między klientami internetowymi a serwerami.</li>
-					<li>WebRTC - Standard HTML5 rozwijany przez World Wide Web Consortium, służący do komunikacji typu P2P, w czasie rzeczywistym, poprzez przeglądarkę internetową. WebRTC można używać do przesyłania danych binarnych lub tekstowych jak i strumieniowego przesyłania audio oraz wideo. </li>
-				</ul>
-			</li>
-			<li>Python - Język programowania wysokiego poziomu ogólnego przeznaczenia, o rozbudowanym pakiecie bibliotek standardowych, którego ideą przewodnią jest czytelność i klarowność kodu źródłowego.
-				<ul> 
-					<li>Aiohttp - Moduł asynchronicznego serwera HTTP stworzony dla łatwej implementacji serwerów w oparciu o moduł asyncio w Pythonie, </li>
-					<li>Python-socketio - Moduł implementujący gniazda oraz umożliwiający integrację z innymi modułami.</li>
-				</ul>
-			</li>
-		</ul>
-	</li>
-	<li>Dekompozycja projektu Klient może wysyłać do serwera następujące żądania: Zapytanie o listę aktualnie podłączonych użytkowników Podczas ładowania interfejsu użytkownika serwer powinien dostarczyć klientowi informacje o aktualnie zalogowanych użytkownikach Zaproś do rozmowy Jeśli osoba wysyłająca zaproszenie uczestniczy już w rozmowie, serwer wyśle zaproszenie do istniejącego już pokoju. W przeciwnym wypadku tworzony jest nowy pokój. Pokój to miejsce gdzie ustanawiane są WebSockety z każdym z klientów. Dane przychodzące od jednego klienta są rozsyłane do wszystkich pozostałych. Dołącz do rozmowy Po otrzymaniu zaproszenia z serwera, można odpowiedzieć mu na dwa sposoby. Przyjmij lub odrzuć (wow). Zakończ połączenie Klient wysyła do serwera prośbę o zerwanie połączenia z pokojem w którym aktualnie się znajduje.</li>
-	<li><H5>Zagwozdki:</H5></li>
-	<ul>
-		<li>Czy osoba nieuczestnicząca w rozmowie może sama poprosić o przyjęcie do pokoju? (wtedy trzeba by chyba zrobić pierwszego użytkownika jakimś zarządcą pokoju)</li>
-		<li>Czy osoba uczestnicząca w rozmowie może otrzymać zaproszenie do innego pokoju?</li>
-	</ul>
-	<p>Dajcie znać co myślicie, z czym się zgadzacie a co byście poprawili. W tych zagwozdkach możecie dać jakieś +1 jeśli sądzicie że takie ficzersy mają się pojawić.</p>
-</ol>
+Celem projektu było zaimplementowanie prostego komunikatora, pozwalającego na prowadzenie rozmów z wykorzystaniem strumieniowania wideo oraz audio. Implementacja została przeprowadzona z użyciem narzędzi takich jak:
+-React.js
+-WebRTC
+-aiohttp
+-socketio
+
+## Opis API
+
+Endpoint 'connections' emituje listę wszystkich podłązonych użytkowników w formacie JSON.
+
+```
+@sio.on('connections')
+async def get_users(sid):
+    str = users_list.get_user_list_in_json(sid)
+    logger.info(f"sending data to {sid}: {str}")
+    await sio.emit('connections', data=str, to=sid)
+```
+
+Endpoint 'candidate' emituje dane 'candidate' adresata potrzebne do utworzenia połączenia
+peer to peer z użytkownikiem odbierającym.
+
+Dane 'candidate' znane jako kandydat ICE wymieniają dostępne metody, za pomocą których peer jest w stanie się komunikować (bezpośrednio lub poprzez serwer TURN). Typowo, każdy z peerów będzie proponował najpierw swoich najlepszych kandydatów, a potem gorszych. Idealnie, kandydatami są UDP (ponieważ jest szybszy i strumienie mediów są w stanie stosunkowo łatwo powrócić do normalnego stanu po przerwaniu), ale standard ICE dopuszcza również kandydatury TCP.
+
+```
+@sio.on('candidate')
+async def candidate(sid, candidate_data):
+    logger.info(f"Message from {sid}: {candidate_data}")
+    to_sid = candidate_data['receiver_sid']
+    await sio.emit('candidate', candidate_data, skip_sid=sid, to=to_sid)
+```
+
+Endpoint 'offer' emituje dane 'offer' adresata potrzebne do utworzenia połączenia
+peer to peer z użytkownikiem odbierającym.
+
+dane 'offer' zawierają informacje o wszelkich obiektach MediaStreamTrack już dołączonych do sesji WebRTC, kodeku i opcjach obsługiwanych przez przeglądarkę oraz wszelkich kandydatach już zebranych przez agenta ICE, w celu wysłania ich przez kanał sygnalizacyjny do potencjalnego peera, aby zażądać połączenia lub zaktualizować konfigurację istniejącego połączenia. 
+
+```
+@sio.on('offer')
+async def offer(sid, offer_data):
+    logger.info(f"Message from {sid}: {offer_data}")
+    to_sid = offer_data['receiver_sid']
+    await sio.emit('offer', offer_data, skip_sid=sid, to=to_sid)
+```
+
+Endpoint 'answer' emituje wiadomość zwrotną
+
+```
+@sio.on('answer')
+async def answer(sid, answer_data):
+    logger.info(f"Message from {sid}: {answer_data}")
+    to_sid = answer_data['receiver_sid']
+    await sio.emit('answer', answer_data, skip_sid=sid, to=to_sid)
+```
+
+Endpoint 'chat' emituje wiadomość od adresata do wszystkich odbiorców w wybranym pokoju
+
+```
+@sio.on('chat')
+async def pass_chat_data(sid, message):
+    logger.info(f"chat message sent: {message}")
+    try:
+        if sio.rooms(sid)[0] != sid:
+            await sio.emit('message', message, room=sio.rooms(sid)[0], skip_sid=sid)
+        else:
+            await sio.emit('message', message, room=sio.rooms(sid)[1], skip_sid=sid)
+    except IndexError as e:
+        logger.warning(f'index error in chat data: {e}')
+```
+
+Endpoint 'name' rozsyła do wszystkich połączonych socketów informacje o nazwie nowo podłaczonego użytkownika
+
+```
+@sio.on('name')
+async def pass_new_clients_name(sid, name):
+    logger.info(f"name set to: {name}")
+    for user in users_list.list_of_users:
+        if user.compare(sid):
+            user.set_name(name)
+            json_object = users_list.parse_user_to_json(user)
+            await sio.emit('add-connection', data=json_object, skip_sid=sid)
+            break
+```
+
+Endpoint 'send-invitation' jest wywoływany w momencie, gdy sender_sid wysyła prośbę do receiver_sid o utworzenie pokoju. Jak można zauważyć, najpierw sprawdzane jest, czy sockety przypadkowo już nie są połaczone. Następnie sprawdzany jest, czy socket odbiorcy nie należy juz do innego pokoju (w tym przypadku emitowany jest sygnał z prośbą o dołączenie). Gdy socket recevier nie znajduje się w żadnym innym pokoju, to tworzony jest request i emitowany jest endpoint 'receive-invite', który spowoduje wyświetlenie informacji na ekranie odbiorcy, że użytkownik o danym socket id próbuje utworzyć połaczenie (można odrzucić lub przyjąć). Maksymalna liczba zaproszeń nie może być większa niż 5 i maksymalny timeout zaproszenai to 10 sekund.
+
+```
+@sio.on('send-invitation')
+@logger.catch
+async def send_invitation(sender_sid, receiver_sid):
+    for room in rooms_list:
+        if rooms_list[room].are_sids_in_room(sender_sid, receiver_sid):
+            logger.warning(f"sender sid: {sender_sid} & receiver sid: {receiver_sid} are already in the same room")
+            await sio.emit('room-is-already-set', to=sender_sid)
+            return
+
+    for room in rooms_list:
+        if rooms_list[room].if_sid_is_in_room(receiver_sid):
+            logger.info(f"receiver sid: {receiver_sid} is already in the room")
+            await sio.emit('room-is-already-set', to=sender_sid)
+            await sio.emit('invitation-request', data={'sender_sid': sender_sid}, to=receiver_sid)
+            return
+
+    if invitations_list.count_same_invitations(sender_sid, receiver_sid) < 5:
+        invitations_list.append(sender_sid, receiver_sid)
+        logger.info(f"New pending invitation - sender sid: {sender_sid} & receiver sid: {receiver_sid}")
+
+    str = json.dumps(Invitation(sender_sid, receiver_sid), indent=2, cls=EncodeInvitation)
+    await sio.emit('receive-invite', data=str, to=receiver_sid)
+    await sio.sleep(10)
+    if invitations_list.invitation_exist(sender_sid, receiver_sid):
+        await sio.emit('invite-expired-receiver', data=str, to=receiver_sid)
+        await sio.emit('invite-expired-sender', data=str, to=sender_sid)
+        invitations_list.remove(sender_sid, receiver_sid)
+        logger.debug(f"invitation {sender_sid}->{receiver_sid} expired")
+```
+
+Endpoint 'accept-invitation' zostanie wywołany, gdy użytkownik do którego przychodzi połączenie potwierdzi połączenie. Z listy zaproszeń zostanie usunięte zaproszenie oraz zostaną wywołane dwa emity, 'invite-accepted' informujący nadawcę o zaakceptowaniu połaczenia oraz 'create-peer' po którym nastąpi próba utworzenia połaczenia peer-to-peer.
+
+```
+@sio.on('accept-invitation')
+async def accept_invitation(sid, data):
+    new_data = json.loads(data)
+    receiver_sid = new_data["receiver_sid"]
+    sender_sid = new_data["sender_sid"]
+    
+    if invitations_list.invitation_exist(sender_sid, receiver_sid):
+        if len(sio.rooms(sender_sid)) > 1:
+            room = add_receiver_to_already_existed_room(sender_sid, receiver_sid)
+        else:
+            room = create_new_room_and_add_participants(sender_sid, receiver_sid)
+        logger.info(f"{receiver_sid} accepted invitation from {sender_sid}")
+        invitations_list.remove(sender_sid, receiver_sid)
+        str = json.dumps(Invitation(sender_sid, receiver_sid), indent=2, cls=EncodeInvitation)
+        await sio.emit('invite-accepted', data=str, to=sender_sid)
+
+        json_list = rooms_list[room].get_all_sid_from_room()
+        await sio.emit('create-peer', data={'room_id': room, 'peers': json_list}, room=room)
+    else:
+        logger.error(f"{sender_sid}->{receiver_sid} invitation not found")
+```
+
+Endpoint 'decline-invitation' zostanie wywołany w momencie, gdy adresat połączenia odrzuci zaproszenie. Wywoływane jest jeden emit 'invite-declined' zarówno do receiver socket sid oraz do sender socket sid. Sender socket_sid i receiver_sid otrzymają informacje o odrzuceniu połaczenia i dialog połączenia zostanie usunięty w aplikacji webowej. 
+
+```
+@sio.on('decline-invitation')
+async def decline_invitation(sid, data):
+    new_data = json.loads(data)
+    sender_sid = new_data["sender_sid"]
+    receiver_sid = new_data["receiver_sid"]
+
+    if invitations_list.invitation_exist(sender_sid, receiver_sid):
+        invitations_list.remove(sender_sid, receiver_sid)
+        logger.debug(f"invitation {sender_sid}->{receiver_sid} declined")
+        str = json.dumps(Invitation(sender_sid, receiver_sid), indent=2, cls=EncodeInvitation)
+        if sid == sender_sid:
+            await sio.emit('invite-declined', data=str, to=receiver_sid)
+        else:
+            await sio.emit('invite-declined', data=str, to=sender_sid)
+        for invitation in invitations_list.list_of_invitations:
+            logger.debug(f"{invitation.sender_sid}->{invitation.receiver_sid}")
+```
+
+Endpoint 'leave-all-rooms' jest wywoływany, gdy wywołujący socket zamknie połączenie, lub zostanie rozłaczony z serwerm.
+
+```
+@sio.on('leave-all-rooms')
+async def decline_invitation(sid):
+    logger.debug(f"before removal:{sio.rooms(sid)}")
+    remove_from_all_rooms(sid)
+    logger.debug(f"after removal:{sio.rooms(sid)}")
+```
+
+Endpoint 'toggle-mic' zostaje wywoływany przez socket w celu informacji pozostałych socketów w pokoju, że jego mikrofon został wyciszony, w tym momencie w aplikacja przestanie odbierać dane z mikrofonu konkretnego socket id.
+
+```
+@sio.on('toggle-mic')
+async def toggle_mic(sid):
+    for room in sio.rooms(sid):
+        if room != sid:
+            await sio.emit('toggle-mic', data={'sender_sid': sid}, to=room)
+```
+Endpoint 'toggle-video' zostaje wywoływany przez socket w celu informacji pozostałych socketów w pokoju, że jego kamera została wyłączona, w tym momencie aplikacja przestanie odbierać dane z kamery  konkretnego socket id.
+
+```
+@sio.on('toggle-video')
+async def toggle_mic(sid):
+    for room in sio.rooms(sid):
+        if room != sid:
+            await sio.emit('toggle-video', data={'sender_sid': sid}, to=room)
+```
+
+Endpoint 'leave-room' zostanie wywołany gdy socket, który wysyła request wyjdzie z pokoju.
+
+```
+@sio.on('leave-room')
+async def leave_rooms(sid):
+    for custom_room in rooms_list:
+        if rooms_list[custom_room].if_sid_is_in_room(sid):
+            rooms_list[custom_room].remove_from_list(sid)
+
+    for room in sio.rooms(sid):
+        if room != sid:
+            await sio.emit('remove-peer-connection', data={'sender_sid': sid}, room=room)
+            sio.leave_room(sid, room)
+```
 
 ## Licencja
 - [MIT License](https://choosealicense.com/licenses/mit/)
