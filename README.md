@@ -26,7 +26,7 @@ Poniżej znajduje się opis wszystkich endpointów.
 
 Endpoint 'connections' emituje listę wszystkich podłązonych użytkowników w formacie JSON.
 
-```
+```python
 @sio.on('connections')
 async def get_users(sid):
     str = users_list.get_user_list_in_json(sid)
@@ -39,7 +39,7 @@ peer to peer z użytkownikiem odbierającym.
 
 Dane 'candidate' znane jako kandydat ICE wymieniają dostępne metody, za pomocą których peer jest w stanie się komunikować (bezpośrednio lub poprzez serwer TURN). Typowo, każdy z peerów będzie proponował najpierw swoich najlepszych kandydatów, a potem gorszych. Idealnie, kandydatami są UDP (ponieważ jest szybszy i strumienie mediów są w stanie stosunkowo łatwo powrócić do normalnego stanu po przerwaniu), ale standard ICE dopuszcza również kandydatury TCP.
 
-```
+```python
 @sio.on('candidate')
 async def candidate(sid, candidate_data):
     logger.info(f"Message from {sid}: {candidate_data}")
@@ -52,7 +52,7 @@ peer to peer z użytkownikiem odbierającym.
 
 dane 'offer' zawierają informacje o wszelkich obiektach MediaStreamTrack już dołączonych do sesji WebRTC, kodeku i opcjach obsługiwanych przez przeglądarkę oraz wszelkich kandydatach już zebranych przez agenta ICE, w celu wysłania ich przez kanał sygnalizacyjny do potencjalnego peera, aby zażądać połączenia lub zaktualizować konfigurację istniejącego połączenia. 
 
-```
+```python
 @sio.on('offer')
 async def offer(sid, offer_data):
     logger.info(f"Message from {sid}: {offer_data}")
@@ -62,7 +62,7 @@ async def offer(sid, offer_data):
 
 Endpoint 'answer' emituje wiadomość zwrotną
 
-```
+```python
 @sio.on('answer')
 async def answer(sid, answer_data):
     logger.info(f"Message from {sid}: {answer_data}")
@@ -72,7 +72,7 @@ async def answer(sid, answer_data):
 
 Endpoint 'chat' emituje wiadomość od adresata do wszystkich odbiorców w wybranym pokoju
 
-```
+```python
 @sio.on('chat')
 async def pass_chat_data(sid, message):
     logger.info(f"chat message sent: {message}")
@@ -87,7 +87,7 @@ async def pass_chat_data(sid, message):
 
 Endpoint 'name' rozsyła do wszystkich połączonych socketów informacje o nazwie nowo podłaczonego użytkownika
 
-```
+```python
 @sio.on('name')
 async def pass_new_clients_name(sid, name):
     logger.info(f"name set to: {name}")
@@ -101,7 +101,7 @@ async def pass_new_clients_name(sid, name):
 
 Endpoint 'send-invitation' jest wywoływany w momencie, gdy sender_sid wysyła prośbę do receiver_sid o utworzenie pokoju. Jak można zauważyć, najpierw sprawdzane jest, czy sockety przypadkowo już nie są połaczone. Następnie sprawdzany jest, czy socket odbiorcy nie należy juz do innego pokoju (w tym przypadku emitowany jest sygnał z prośbą o dołączenie). Gdy socket recevier nie znajduje się w żadnym innym pokoju, to tworzony jest request i emitowany jest endpoint 'receive-invite', który spowoduje wyświetlenie informacji na ekranie odbiorcy, że użytkownik o danym socket id próbuje utworzyć połaczenie (można odrzucić lub przyjąć). Maksymalna liczba zaproszeń nie może być większa niż 5 i maksymalny timeout zaproszenai to 10 sekund.
 
-```
+```python
 @sio.on('send-invitation')
 @logger.catch
 async def send_invitation(sender_sid, receiver_sid):
@@ -134,7 +134,7 @@ async def send_invitation(sender_sid, receiver_sid):
 
 Endpoint 'accept-invitation' zostanie wywołany, gdy użytkownik do którego przychodzi połączenie potwierdzi połączenie. Z listy zaproszeń zostanie usunięte zaproszenie oraz zostaną wywołane dwa emity, 'invite-accepted' informujący nadawcę o zaakceptowaniu połaczenia oraz 'create-peer' po którym nastąpi próba utworzenia połaczenia peer-to-peer.
 
-```
+```python
 @sio.on('accept-invitation')
 async def accept_invitation(sid, data):
     new_data = json.loads(data)
@@ -159,7 +159,7 @@ async def accept_invitation(sid, data):
 
 Endpoint 'decline-invitation' zostanie wywołany w momencie, gdy adresat połączenia odrzuci zaproszenie. Wywoływane jest jeden emit 'invite-declined' zarówno do receiver socket sid oraz do sender socket sid. Sender socket_sid i receiver_sid otrzymają informacje o odrzuceniu połaczenia i dialog połączenia zostanie usunięty w aplikacji webowej. 
 
-```
+```python
 @sio.on('decline-invitation')
 async def decline_invitation(sid, data):
     new_data = json.loads(data)
@@ -180,7 +180,7 @@ async def decline_invitation(sid, data):
 
 Endpoint 'leave-all-rooms' jest wywoływany, gdy wywołujący socket zamknie połączenie, lub zostanie rozłaczony z serwerm.
 
-```
+```python
 @sio.on('leave-all-rooms')
 async def decline_invitation(sid):
     logger.debug(f"before removal:{sio.rooms(sid)}")
@@ -190,7 +190,7 @@ async def decline_invitation(sid):
 
 Endpoint 'toggle-mic' zostaje wywoływany przez socket w celu informacji pozostałych socketów w pokoju, że jego mikrofon został wyciszony, w tym momencie w aplikacja przestanie odbierać dane z mikrofonu konkretnego socket id.
 
-```
+```python
 @sio.on('toggle-mic')
 async def toggle_mic(sid):
     for room in sio.rooms(sid):
@@ -199,7 +199,7 @@ async def toggle_mic(sid):
 ```
 Endpoint 'toggle-video' zostaje wywoływany przez socket w celu informacji pozostałych socketów w pokoju, że jego kamera została wyłączona, w tym momencie aplikacja przestanie odbierać dane z kamery  konkretnego socket id.
 
-```
+```python
 @sio.on('toggle-video')
 async def toggle_mic(sid):
     for room in sio.rooms(sid):
@@ -209,7 +209,7 @@ async def toggle_mic(sid):
 
 Endpoint 'leave-room' zostanie wywołany gdy socket, który wysyła request wyjdzie z pokoju.
 
-```
+```python
 @sio.on('leave-room')
 async def leave_rooms(sid):
     for custom_room in rooms_list:
