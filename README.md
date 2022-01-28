@@ -1,55 +1,14 @@
 # SIIMZoomCloneApp
 ## Spis treści
 - [Cel projektu](#cel_projektu)
-- [Opis projektu](#opis_projektu)
+- [Zasada działania](#zasada_dzialania)
 - [Opis API](#opis_api)
 - [Demo](#demo)
+- [Wykorzystane narzędzia](#wykorzystane_narzedzia)
 - [Instrukcja instalacji i uruchomienia](#instrukcja_instalacji_i_uruchomienia)
-- [Założenia projektu i jego realizacja](#założenia_projektu)
 - [Licencja](#licencja)
 
-## Opis_projektu
-
-## Demo
-#### Ekran startowy
-![screenshot](SIIMZoomCloneApp.png)
-#### Próba nawiązania połączenia z wybranym użytkownikiem
-![screenshot](SIIMZoomCloneApp2.png)
-
-Aplikacja została zamieszczona na platformie Heroku i można ją sprawdzić pod poniższym linkiem:
-[SIIMZoomCloneApp na Heroku](https://aqueous-thicket-27796.herokuapp.com/)
-
-## Wykorzystane narzedzia
-- [Python](https://www.python.org/downloads/)
-- [Node.js](https://nodejs.org/en/)
-
-## Instrukcja_instalacji_i_uruchomienia
-
-### Uruchomienie Lokalnie
-
-#### Kroki dla clienta:
-- `npm install`
-- `npm start`
-
-#### Kroki dla Serwera:
-- `pip install -r ./requirements.txt`
-- `python ./main.py`
-
-### Uruchomienie przy pomocy konteneryzacji
-#### Kroki dla docker-compose:
-- `sudo docker-compose build`
-- `sudo docker-compose up`
-
-#### Kroki dla dockera:
-##### Kroki dla clienta:
-- `sudo docker build -t client .`
-- `sudo docker run -dp 3000:3000 client -e IP_ADDRES='127.0.0.1'`
-
-##### Kroki dla Serwera:
-- `sudo docker build -t server .`
-- `sudo docker run -dp 8000:8000 server`
-
-## Cel Projektu
+## Cel_projektu
 
 Celem projektu było zaimplementowanie prostego komunikatora, pozwalającego na prowadzenie rozmów z wykorzystaniem strumieniowania wideo oraz audio. Implementacja została przeprowadzona z użyciem narzędzi takich jak:
 -React.js
@@ -57,7 +16,18 @@ Celem projektu było zaimplementowanie prostego komunikatora, pozwalającego na 
 -aiohttp
 -socketio
 
-## Opis API
+## Zasada_dzialania
+Wizyjno Godka jest aplikacją webową, gdzie serwer chodzi lokalnie na porcie 8000, natomiast aplikacja na porcie 3000
+Serwer aplikacji jest oparty o aiohttp czyli asynchroniczny serwer http w Python.
+Dodatkowo używana jest w nim biblioteka socketio, aby serwer ten mógł się komunikować z frontem aplikacji przez WebRTC.
+Warstwa wizualna aplikacji jest zbudowana przy użyciu React.js oraz wspomnianego juz WebRTC 
+Wybraliśmy takie rozwiązanie ze względu na dobre wynik WebRTC w strumieniowaniu wideo.
+
+Zasada działania serwera opiera się na prostych strukturach przechowujących informacje o zalogowanych uzytkownikach, bieżących zaproszeniach oraz liście pokoi
+Istnieje natomiast sporo socketowych endpointów, które pozwalają aplikacji na ustanowienie połączenia WebRTC oraz reagować na elementarne zdarzenia takie jak przyjmowanie/odrzucanie zaproszeń, rozłączanie, wyciszanie mikrofonu itp. 
+Poniżej znajduje się opis wszystkich endpointów.
+
+## Opis_api
 
 Endpoint 'connections' emituje listę wszystkich podłązonych użytkowników w formacie JSON.
 
@@ -256,6 +226,45 @@ async def leave_rooms(sid):
             await sio.emit('remove-peer-connection', data={'sender_sid': sid}, room=room)
             sio.leave_room(sid, room)
 ```
+
+## Demo
+#### Ekran startowy
+![screenshot](SIIMZoomCloneApp.png)
+#### Próba nawiązania połączenia z wybranym użytkownikiem
+![screenshot](SIIMZoomCloneApp2.png)
+
+Aplikacja została zamieszczona na platformie Heroku i można ją sprawdzić pod poniższym linkiem:
+[SIIMZoomCloneApp na Heroku](https://aqueous-thicket-27796.herokuapp.com/)
+
+## Wykorzystane_narzedzia
+- [Python](https://www.python.org/downloads/)
+- [Node.js](https://nodejs.org/en/)
+
+## Instrukcja_instalacji_i_uruchomienia
+
+### Uruchomienie Lokalnie
+
+#### Kroki dla clienta:
+- `npm install`
+- `npm start`
+
+#### Kroki dla Serwera:
+- `pip install -r ./requirements.txt`
+- `python ./main.py`
+
+### Uruchomienie przy pomocy konteneryzacji
+#### Kroki dla docker-compose:
+- `sudo docker-compose build`
+- `sudo docker-compose up`
+
+#### Kroki dla dockera:
+##### Kroki dla clienta:
+- `sudo docker build -t client .`
+- `sudo docker run -dp 3000:3000 client -e IP_ADDRES='127.0.0.1'`
+
+##### Kroki dla Serwera:
+- `sudo docker build -t server .`
+- `sudo docker run -dp 8000:8000 server`
 
 ## Licencja
 - [MIT License](https://choosealicense.com/licenses/mit/)
