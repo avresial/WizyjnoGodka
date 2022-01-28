@@ -9,12 +9,7 @@
 - [Licencja](#licencja)
 
 ## Cel_projektu
-
-Celem projektu było zaimplementowanie prostego komunikatora, pozwalającego na prowadzenie rozmów z wykorzystaniem strumieniowania wideo oraz audio. Implementacja została przeprowadzona z użyciem narzędzi takich jak:
--React.js
--WebRTC
--aiohttp
--socketio
+Celem projektu było zaimplementowanie prostego komunikatora, pozwalającego na prowadzenie rozmów z wykorzystaniem strumieniowania wideo oraz audio.
 
 ## Zasada_dzialania
 Wizyjno Godka jest aplikacją webową, gdzie serwer chodzi lokalnie na porcie 8000, natomiast aplikacja na porcie 3000
@@ -238,7 +233,12 @@ Aplikacja została zamieszczona na platformie Heroku i można ją sprawdzić pod
 
 ## Wykorzystane_narzedzia
 - [Python](https://www.python.org/downloads/)
-- [Node.js](https://nodejs.org/en/)
+    - [AIOHTTP](https://docs.aiohttp.org/en/stable/)
+    - [SocketIO](https://python-socketio.readthedocs.io/en/latest/)
+
+- [React.js](https://pl.reactjs.org/)
+    - [WebRTC](https://webrtc.org/)
+    - [SocketIO](https://socket.io/docs/v4/client-api/)
 
 ## Instrukcja_instalacji_i_uruchomienia
 
