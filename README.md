@@ -1,4 +1,4 @@
-# SIIMZoomCloneApp
+# WizyjnoGodka
 ## Spis treści
 - [Cel projektu](#cel_projektu)
 - [Zasada działania](#zasada_dzialania)
