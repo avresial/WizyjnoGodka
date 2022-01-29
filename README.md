@@ -229,7 +229,7 @@ async def leave_rooms(sid):
 ![screenshot](SIIMZoomCloneApp2.png)
 
 Aplikacja została zamieszczona na platformie Heroku i można ją sprawdzić pod poniższym linkiem:
-[SIIMZoomCloneApp na Heroku](https://aqueous-thicket-27796.herokuapp.com/)
+[WizyjnoGodka na Heroku](https://aqueous-thicket-27796.herokuapp.com/)
 
 ## Wykorzystane_narzedzia
 - [Python](https://www.python.org/downloads/)
@@ -268,4 +268,4 @@ Aplikacja została zamieszczona na platformie Heroku i można ją sprawdzić pod
 
 ## Licencja
 - [MIT License](https://choosealicense.com/licenses/mit/)
-- [Copyright 2020 © ](https://github.com/avresial/SIIMZoomCloneApp)
+- [Copyright 2020 © ](https://github.com/avresial/WizyjnoGodka)
