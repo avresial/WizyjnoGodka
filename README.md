@@ -3,9 +3,9 @@
 - [Cel projektu](#cel_projektu)
 - [Zasada działania](#zasada_dzialania)
 - [Opis API](#opis_api)
-- [Demo](#demo)
 - [Wykorzystane narzędzia](#wykorzystane_narzedzia)
 - [Instrukcja instalacji i uruchomienia](#instrukcja_instalacji_i_uruchomienia)
+- [Testowanie](#testowanie)
 - [Licencja](#licencja)
 
 ## Cel_projektu
@@ -222,15 +222,6 @@ async def leave_rooms(sid):
             sio.leave_room(sid, room)
 ```
 
-## Demo
-#### Ekran startowy
-![screenshot](SIIMZoomCloneApp.png)
-#### Próba nawiązania połączenia z wybranym użytkownikiem
-![screenshot](SIIMZoomCloneApp2.png)
-
-Aplikacja została zamieszczona na platformie Heroku i można ją sprawdzić pod poniższym linkiem:
-[WizyjnoGodka na Heroku](https://aqueous-thicket-27796.herokuapp.com/)
-
 ## Wykorzystane_narzedzia
 - [Python](https://www.python.org/downloads/)
     - [AIOHTTP](https://docs.aiohttp.org/en/stable/)
@@ -265,6 +256,11 @@ Aplikacja została zamieszczona na platformie Heroku i można ją sprawdzić pod
 ##### Kroki dla Serwera:
 - `sudo docker build -t server .`
 - `sudo docker run -dp 8000:8000 server`
+
+## Testowanie
+
+Aplikacja została zamieszczona na platformie Heroku i można ją sprawdzić pod poniższym linkiem:
+[WizyjnoGodka na Heroku](https://aqueous-thicket-27796.herokuapp.com/)
 
 ## Licencja
 - [MIT License](https://choosealicense.com/licenses/mit/)
